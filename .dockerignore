@@ -1,0 +1,8 @@
+# Build context for packages/sandbox/Dockerfile (the repo's only Dockerfile): ship exactly what it COPYs.
+# Never .env, .git or the 1.6G node_modules.
+*
+!packages/shared/package.json
+!packages/shared/src
+!packages/sandbox/package.json
+!packages/sandbox/src
+!packages/sandbox/fixtures

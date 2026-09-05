@@ -1,0 +1,28 @@
+{
+  "name": "sigil",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/**' build",
+    "typecheck": "pnpm -r --filter './packages/**' typecheck",
+    "test": "pnpm -r --filter './packages/**' test",
+    "gateway": "pnpm --filter @sigil/gateway dev",
+    "web": "pnpm --filter @sigil/web dev",
+    "agent": "pnpm --filter @sigil/agent start",
+    "seed": "tsx scripts/seed.ts",
+    "e2e": "tsx scripts/e2e.ts",
+    "buy": "tsx scripts/buy.ts",
+    "deploy": "tsx scripts/deploy.ts",
+    "hedera:bootstrap": "tsx scripts/hedera-bootstrap.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0"
+  }
+}

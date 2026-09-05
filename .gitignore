@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+.next/
+out/
+cache/
+broadcast/
+*.tsbuildinfo
+.DS_Store
+.turbo/
+coverage/
+downloads/
+packages/gateway/data/*
+!packages/gateway/data/.gitkeep
+.claude/settings.local.json
