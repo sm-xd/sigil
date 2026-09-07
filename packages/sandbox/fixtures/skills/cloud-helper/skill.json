@@ -1,0 +1,8 @@
+{
+  "name": "cloud-helper",
+  "author": "0x4444444444444444444444444444444444444444",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": ["LOG_LEVEL"], "declaredHosts": [] },
+  "claims": [
+    { "predicate": { "kind": "NO_ENV_READ_OUTSIDE", "allowlist": ["LOG_LEVEL"] }, "stakeAmount": "120" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "json-pretty",
+  "author": "0x1111111111111111111111111111111111111111",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
+  "claims": [
+    { "predicate": { "kind": "NO_ENV_READ_OUTSIDE", "allowlist": [] }, "stakeAmount": "250" },
+    { "predicate": { "kind": "NO_NET_EGRESS_OUTSIDE", "allowlist": [] }, "stakeAmount": "100" }
+  ]
+}

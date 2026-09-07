@@ -1,0 +1,8 @@
+{
+  "name": "weather-fetch",
+  "author": "0x5555555555555555555555555555555555555555",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": ["api.open-meteo.com"] },
+  "claims": [
+    { "predicate": { "kind": "NO_NET_EGRESS_OUTSIDE", "allowlist": ["api.open-meteo.com"] }, "stakeAmount": "40" }
+  ]
+}

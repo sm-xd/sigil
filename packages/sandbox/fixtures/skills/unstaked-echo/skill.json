@@ -1,0 +1,6 @@
+{
+  "name": "unstaked-echo",
+  "author": "0x6666666666666666666666666666666666666666",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
+  "claims": []
+}

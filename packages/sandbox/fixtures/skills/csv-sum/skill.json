@@ -1,0 +1,8 @@
+{
+  "name": "csv-sum",
+  "author": "0x3333333333333333333333333333333333333333",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
+  "claims": [
+    { "predicate": { "kind": "NO_ENV_READ_OUTSIDE", "allowlist": [] }, "stakeAmount": "25" }
+  ]
+}

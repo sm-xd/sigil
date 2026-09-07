@@ -1,0 +1,8 @@
+{
+  "name": "slugify",
+  "author": "0x2222222222222222222222222222222222222222",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
+  "claims": [
+    { "predicate": { "kind": "NO_FS_READ_OUTSIDE", "allowlist": ["./**"] }, "stakeAmount": "60" }
+  ]
+}
