@@ -1,0 +1,13 @@
+{
+  "name": "@sigil/contracts-arc",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "forge build && cp out/SigilStake.sol/SigilStake.json out/DisputeResolver.sol/DisputeResolver.json abi/",
+    "test": "forge test -vv"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "forge-std": "github:foundry-rs/forge-std#v1.16.2"
+  }
+}
