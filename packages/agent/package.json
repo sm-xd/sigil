@@ -1,0 +1,21 @@
+{
+  "name": "@sigil/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "once": "tsx src/index.ts --once",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx src/index.test.ts"
+  },
+  "dependencies": {
+    "@sigil/sandbox": "workspace:*",
+    "@sigil/shared": "workspace:*",
+    "@x402/fetch": "2.25.0",
+    "@x402/hedera": "2.25.0",
+    "dotenv": "^16.4.5",
+    "viem": "^2.56.3"
+  },
+  "devDependencies": { "typescript": "^5.7.0", "tsx": "^4.19.2", "@types/node": "^22.10.0" }
+}
