@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Tokens (DESIGN.md). Light theme only, on purpose. */
+:root {
+  --paper: #F4F1EA;
+  --paper-2: #FBFAF6;
+  --ink: #16130F;
+  --ink-2: #5F5A50;
+  --ink-3: #9A9488;
+  --rule: rgba(22, 19, 15, 0.14);
+  --rule-2: rgba(22, 19, 15, 0.32);
+  --seal: #B3261E;
+  --seal-ink: #7A1912;
+  --upheld: #3E6B3A;
+  --radius-ctl: 2px;
+  --radius-tag: 3px;
+}
+
+/* Tailwind knows only these tokens: no stock palette, radii or weights, and only the DESIGN.md type scale (32/44 are the two big-money mono sizes). */
+@theme inline {
+  --color-*: initial;
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-2: var(--rule-2);
+  --color-seal: var(--seal);
+  --color-seal-ink: var(--seal-ink);
+  --color-upheld: var(--upheld);
+  --radius-*: initial;
+  --radius-ctl: var(--radius-ctl);
+  --radius-tag: var(--radius-tag);
+  --font-weight-*: initial;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --container-page: 1120px;
+  --text-*: initial;
+  --text-11: 11px;
+  --text-11--line-height: 16px;
+  --text-12: 12px;
+  --text-12--line-height: 18px;
+  --text-13: 13px;
+  --text-13--line-height: 20px;
+  --text-14: 14px;
+  --text-14--line-height: 22px;
+  --text-16: 16px;
+  --text-16--line-height: 26px;
+  --text-20: 20px;
+  --text-20--line-height: 28px;
+  --text-28: 28px;
+  --text-28--line-height: 34px;
+  --text-32: 32px;
+  --text-32--line-height: 36px;
+  --text-40: 40px;
+  --text-40--line-height: 44px;
+  --text-44: 44px;
+  --text-44--line-height: 48px;
+  --text-56: 56px;
+  --text-56--line-height: 60px;
+}
+
+@layer base {
+  html { color-scheme: light; background: var(--paper); }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 14px; line-height: 22px; -webkit-font-smoothing: antialiased; }
+  ::selection { background: rgba(179, 38, 30, 0.16); }
+  :focus-visible, .file:focus-within { outline: 1.5px solid var(--seal); outline-offset: 2px; }
+  code, pre { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+}
+
+@layer components {
+  .display { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; font-optical-sizing: auto; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .label { font-family: var(--font-sans); font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+  .rule { border-top: 1px solid var(--rule); }
+  .rule-2 { border-top: 1px solid var(--rule-2); }
+
+  /* App pages and landing sections: a 200px label column on the left, content to the right; stacks on mobile. */
+  .page { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 32px; row-gap: 12px; }
+  @media (min-width: 768px) { .page { grid-template-columns: 200px minmax(0, 1fr); row-gap: 0; } }
+
+  /* Ledger tables: strong rule under the header, hairlines between rows, no zebra, no radius, no hover. */
+  .ledger { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 20px; }
+  .ledger th { padding: 0 12px 8px 0; text-align: left; vertical-align: bottom; border-bottom: 1px solid var(--rule-2); font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+  .ledger td { padding: 10px 12px 10px 0; vertical-align: top; border-bottom: 1px solid var(--rule); }
+  .ledger th:last-child, .ledger td:last-child { padding-right: 0; }
+  .ledger .num { text-align: right; }
+  .ledger td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Status stamp: bordered, never filled. The BROKEN and UPHELD families are coloured and sit slightly askew; everything else is ink. */
+  .stamp { display: inline-block; font-family: var(--font-mono); font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border: 1.5px solid currentColor; border-radius: var(--radius-tag); color: var(--ink); white-space: nowrap; vertical-align: middle; }
+  .stamp[data-tone="seal"] { color: var(--seal); transform: rotate(-2deg); }
+  .stamp[data-tone="upheld"] { color: var(--upheld); transform: rotate(-2deg); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 12px 6px; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--ink); background: var(--paper-2); border: 1px solid var(--rule-2); border-radius: var(--radius-ctl); cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--ink); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; border-color: var(--rule-2); transform: none; }
+  .btn-seal { color: var(--paper-2); background: var(--seal); border-color: var(--seal); }
+  .btn-seal:hover { background: var(--seal-ink); border-color: var(--seal-ink); }
+  .btn-seal:disabled { background: var(--seal); border-color: var(--seal); }
+
+  /* Seal-red text button: the primary action beside a section title. */
+  .act { font-size: 13px; line-height: 20px; font-weight: 500; color: var(--seal); background: none; border: 0; padding: 0; cursor: pointer; white-space: nowrap; }
+  .act:hover { color: var(--seal-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+  .link { color: inherit; font: inherit; text-decoration: underline; text-decoration-color: var(--rule-2); text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; }
+  .link:hover { text-decoration-color: currentColor; }
+
+  .field { display: block; width: 100%; padding: 6px 10px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; line-height: 20px; color: var(--ink); background: var(--paper-2); border: 1px solid var(--rule-2); border-radius: var(--radius-ctl); }
+  select.field { appearance: none; -webkit-appearance: none; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235F5A50' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  .field::placeholder { color: var(--ink-3); }
+  .field:focus-visible { outline: none; border-color: var(--ink); }
+  .field[aria-invalid="true"] { border-color: var(--seal); }
+
+  /* Truncated id; click copies. */
+  .hash { white-space: nowrap; font: inherit; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: inherit; background: none; border: 0; padding: 0; cursor: copy; }
+  .hash:hover { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+
+  /* The money panel's pot line straddles the two columns until the claim resolves, then slides under the winner. */
+  .pot { width: 50%; transform: translateX(50%); }
+  .pot[data-side="staker"] { transform: translateX(0); }
+  .pot[data-side="disputer"] { transform: translateX(calc(100% + 17px)); }
+  .after-move { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .act, .link, .hash { transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, text-decoration-color 150ms ease-out, opacity 150ms ease-out; }
+  .pot { transition: transform 400ms ease-out; }
+  .after-move { animation: appear 400ms ease-out 400ms both; }
+}
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }

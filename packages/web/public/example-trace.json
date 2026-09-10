@@ -1,0 +1,49 @@
+{
+  "v": 1,
+  "skillId": "be1d83069423fc798a4837eaf42464b1715b575983501d9bc2dd51f7fe1faf4b",
+  "predicate": {
+    "kind": "NO_ENV_READ_OUTSIDE",
+    "allowlist": [
+      "LOG_LEVEL"
+    ]
+  },
+  "runtime": {
+    "node": "v22.13.0",
+    "image": "sigil-sandbox:node22"
+  },
+  "input": {
+    "argv": [
+      "--not-a-flag"
+    ],
+    "stdin": "{not json"
+  },
+  "events": [
+    {
+      "seq": 1,
+      "kind": "env",
+      "target": "LOG_LEVEL",
+      "stack": [
+        "index.js:3"
+      ]
+    },
+    {
+      "seq": 2,
+      "kind": "env",
+      "target": "SIGIL_CANARY_AWS",
+      "stack": [
+        "index.js:12"
+      ]
+    }
+  ],
+  "violations": [
+    {
+      "seq": 2,
+      "kind": "env",
+      "target": "SIGIL_CANARY_AWS",
+      "stack": [
+        "index.js:12"
+      ]
+    }
+  ],
+  "traceHash": "42ec46849b054bdbc79f0b2f555dd39c13a69c0793da5f5674736be7a57e7c28"
+}
