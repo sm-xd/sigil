@@ -5,9 +5,19 @@ description: "How an agent pays to use a skill, settled on Hedera by Blocky402 â
 
 Skills are not free to read. The gateway sells a skill's source over **x402**, the pay-per-request standard, and the payment settles on **Hedera** through the **Blocky402** facilitator. Every payment mints a licence NFT, so the same account never pays twice.
 
-<Frame caption="The x402 request, in order. Replace this with your generated sequence diagram (see the prompt in the repo).">
-  <img src="/img/diagram-x402-sequence.png" alt="x402 payment sequence" />
-</Frame>
+```mermaid
+sequenceDiagram
+  participant Agent
+  participant Gateway
+  participant Blocky402
+  Agent->>Gateway: GET /skills/:id/source
+  Gateway-->>Agent: 402 Payment Required (price, 2 legs)
+  Note over Agent: sign a partial Hedera transfer
+  Agent->>Gateway: retry with PAYMENT-SIGNATURE
+  Gateway->>Blocky402: verify + settle
+  Blocky402-->>Gateway: settled (facilitator pays the fee)
+  Gateway-->>Agent: 200 Â· source + licence NFT minted
+```
 
 ## The flow, step by step
 
