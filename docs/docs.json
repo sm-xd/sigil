@@ -1,0 +1,61 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Sigil",
+  "description": "A trust layer for AI agent skills: stake USDC on what a skill does, lose it when the evidence goes against you.",
+  "colors": {
+    "primary": "#B3261E",
+    "light": "#E0574F",
+    "dark": "#8A1219"
+  },
+  "favicon": "/img/favicon.png",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Start here",
+        "pages": [
+          "introduction",
+          "how-it-works",
+          "architecture"
+        ]
+      },
+      {
+        "group": "How the money moves",
+        "pages": [
+          "x402-payments",
+          "whats-real"
+        ]
+      },
+      {
+        "group": "For partners and judges",
+        "pages": [
+          "tracks"
+        ]
+      },
+      {
+        "group": "Run it yourself",
+        "pages": [
+          "run-it"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Live demo",
+        "href": "https://dr7shuhqdeo3p.cloudfront.net"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "GitHub",
+      "href": "https://github.com/sm-xd/sigil"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/sm-xd/sigil"
+    }
+  }
+}

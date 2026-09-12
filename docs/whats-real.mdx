@@ -1,0 +1,61 @@
+---
+title: "What is real vs stubbed"
+description: "An honest map of what runs live on testnet today and the one thing that is still a labelled mock."
+---
+
+Sigil is honest about its own status. Almost everything runs live on testnet and is verifiable right now. Exactly one thing is a mock, and it is labelled as such on every screen.
+
+## Real and verified
+
+<CardGroup cols={2}>
+  <Card title="x402 paid service" icon="circle-check">
+    Live on Hedera testnet, settled by Blocky402. Twelve real paid requests.
+  </Card>
+  <Card title="Per-call metering" icon="circle-check">
+    Priced per kilobyte, USDC and HBAR legs, both settled on-chain.
+  </Card>
+  <Card title="Licence NFT (HTS)" icon="circle-check">
+    Token 0.0.10483154, minted to each payer, gives free reads afterward.
+  </Card>
+  <Card title="Deterministic sandbox" icon="circle-check">
+    Deny-by-default, same input gives the same hash across machines and Docker.
+  </Card>
+  <Card title="Arc contracts" icon="circle-check">
+    SigilStake and DisputeResolver deployed; 28 passing contract tests; five full cycles settled.
+  </Card>
+  <Card title="Circle Agent Stack wallet" icon="circle-check">
+    The agent signs its own Arc transactions as ERC-4337 user operations.
+  </Card>
+  <Card title="HCS audit trail" icon="circle-check">
+    Every claim, payment, and outcome is a Hedera message you can open.
+  </Card>
+  <Card title="Hosted on AWS" icon="circle-check">
+    Web and gateway live behind CloudFront; the full cycle has run through the cloud server.
+  </Card>
+</CardGroup>
+
+## The one honest stub
+
+<Warning>
+**World Selfie Check runs as a labelled mock** until Sandbox tester access lands. The abuse-prevention rule it feeds — one person cannot hold both sides of a claim — is fully built, enforced, and tested. Only the live selfie call is stubbed, and the UI says "Mock Selfie Check" wherever it appears.
+</Warning>
+
+## Known limitations (on purpose)
+
+We would rather name these than hide them:
+
+- **The gateway keeps its live index in a single JSON file.** Hedera is the durable audit log; the file is a fast cache. One gateway instance, not a cluster.
+- **The browser-signed wallet flows** on the claim and dispute pages are written and type-checked but were driven end-to-end by the agent and the seed, not yet from a browser wallet.
+- **Mainnet is not deployed yet.** The contracts have no owner and no upgrade path, so mainnet is a fresh deploy planned before Sept 30.
+
+## Verify it yourself
+
+```bash
+# The live paywall (returns 402 with the price)
+curl -i https://d32gga9078v6q0.cloudfront.net/skills/be1d83069423fc798a4837eaf42464b1715b575983501d9bc2dd51f7fe1faf4b/source
+
+# The discovery directory
+curl -s https://d32gga9078v6q0.cloudfront.net/skills
+```
+
+The full, link-by-link status table lives in the repo's [README](https://github.com/sm-xd/sigil#what-is-real-vs-stubbed).

@@ -1,0 +1,56 @@
+---
+title: "How it works"
+description: "One claim, from the money going in to the money moving out, in five steps."
+---
+
+A claim about a skill has a whole life: it is opened with money behind it, an agent buys and tests the skill, and if the skill misbehaves the money moves. Here is that loop, start to finish.
+
+<Frame caption="How a claim lives and dies. Replace this with your generated diagram (see the prompt in the repo).">
+  <img src="/img/diagram-claim-lifecycle.png" alt="The five-step claim lifecycle" />
+</Frame>
+
+<Steps>
+  <Step title="Claim — lock the money on Arc">
+    A participant picks a skill and one of three testable rules (called **predicates**):
+
+    - `NO_ENV_READ_OUTSIDE` — reads no environment variable outside an allowlist.
+    - `NO_NET_EGRESS_OUTSIDE` — opens no network connection outside an allowlist.
+    - `NO_FS_READ_OUTSIDE` — reads no file outside the skill's own folder.
+
+    They prove they are a real, distinct human with **World Selfie Check**, then lock USDC in the `SigilStake` contract on **Arc**. The claim is announced on a **Hedera** registry topic and gets its own audit topic.
+  </Step>
+  <Step title="Consume — an agent pays to use the skill">
+    An agent reads the public list of skills (`GET /skills`), applies a simple, printed policy (only skills with real money staked on Arc are worth trusting), and asks the gateway for the source.
+
+    Without a licence, the gateway answers **`402 Payment Required`**. The agent pays a tiny per-kilobyte fee over **x402**, the **Blocky402** facilitator settles it on Hedera, and the gateway hands over the source and mints a **licence NFT** to the payer. A person can do the same with one command: `pnpm buy <skill>`.
+  </Step>
+  <Step title="Probe — run the skill in a sealed sandbox">
+    The agent runs the skill in a deterministic sandbox, with a normal input and a **malformed** input, because error paths are where secrets leak. The sandbox denies everything by default: fake "canary" secrets are never readable, files outside the skill's folder fail, and every network call is refused unless the claim's allowlist permits it. Every blocked attempt is logged, and the whole run is hashed into a **trace**.
+  </Step>
+  <Step title="Dispute — put a bond behind the evidence">
+    If the skill broke the rule, the agent posts a **counter-bond** (at least 25% of the stake) and the trace hash to `SigilStake.dispute()` from **its own Circle Agent Stack wallet**, and uploads the full evidence bundle to Hedera. No human is asked to judge.
+  </Step>
+  <Step title="Settle — the money moves">
+    An independent **verifier re-runs the exact same bundle**. If it reproduces the violation, the disputer wins; if it does not, the original staker keeps the pot. `SigilStake.resolve()` pays out on Arc, and the outcome is written to Hedera. A claim that nobody breaks within the cooldown can be withdrawn with the stake intact.
+  </Step>
+</Steps>
+
+## The rule that makes it real
+
+The verifier's decision is a single line, and it trusts no opinion:
+
+```
+reproduced = (the re-run's hash == the disputer's hash) AND (violations > 0)
+```
+
+Anyone can download the evidence bundle from Hedera and run it themselves to check the outcome. That is the whole point: **the truth is reproducible, not asserted.**
+
+## Try the buyer's side in 30 seconds
+
+Every skill page has a **"Use this skill"** section. Press **Request the source** and you will see the exact `402` paywall an agent gets. A browser cannot pay it (paying needs a signed Hedera transaction), so to actually fetch a skill you run one command:
+
+```bash
+E2E_FRESH_PAYER=1 pnpm buy slugify
+```
+
+That pays the fee once, saves the skill's files locally, and gives your account a licence so every later download is free.

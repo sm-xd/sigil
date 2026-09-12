@@ -1,0 +1,51 @@
+---
+title: "What is Sigil?"
+description: "Stake real money on what an AI skill does. Break the claim with proof, take the money."
+---
+
+## The one-line version
+
+An AI agent installs "skills" — small tools, MCP servers, snippets of code. One bad skill can leak a cloud key or drain a wallet. Today an agent has only two signals about a skill: the author's description, and a scanner's opinion. **Neither one costs anything to be wrong.**
+
+Sigil makes being trustworthy cost money. Someone stakes USDC behind a **specific, testable claim** about a skill, for example "this skill reads no environment variable except `LOG_LEVEL`". Anyone who can produce a machine-checked trace that **breaks** that claim takes the stake.
+
+No human votes. No language model gives a verdict. The only thing standing behind a claim is capital at risk.
+
+## See it live
+
+<CardGroup cols={2}>
+  <Card title="Live web app" icon="globe" href="https://dr7shuhqdeo3p.cloudfront.net">
+    The registry of skills, each with the money staked on it, on Hedera and Arc testnet.
+  </Card>
+  <Card title="Live gateway API" icon="server" href="https://d32gga9078v6q0.cloudfront.net/health">
+    The x402-paid service that sells skill source and settles payments through Blocky402.
+  </Card>
+  <Card title="Source code" icon="github" href="https://github.com/sm-xd/sigil">
+    The full monorepo: contracts, gateway, agent, sandbox, and web.
+  </Card>
+  <Card title="What it targets" icon="trophy" href="/tracks">
+    Three hackathon tracks — Hedera, Arc, and World — and the evidence for each.
+  </Card>
+</CardGroup>
+
+<Frame caption="The registry: six skills, the USDC staked on each, and the status of every claim.">
+  <img src="/img/registry.png" alt="Sigil registry screen" />
+</Frame>
+
+## Why it matters
+
+| Without Sigil | With Sigil |
+|---|---|
+| "Trust me, this skill is safe." | "There is 10 USDC saying this skill reads no secrets. Prove otherwise and it's yours." |
+| A scanner flags a maybe-issue, for free. | A challenge costs a bond, and pays out only on reproducible proof. |
+| A fake track record is free to manufacture. | Personhood check stops one person funding both sides of a claim. |
+
+## The three chains, in one breath
+
+Sigil uses each chain for the one thing it is best at:
+
+- **Hedera** records every claim, challenge, and outcome, sells access to skills over x402, and mints a licence NFT — all at sub-cent cost.
+- **Arc** holds the staked USDC and pays it to the winner when a claim is settled.
+- **World** proves each participant is a distinct human, so nobody can play both sides.
+
+Read [How it works](/how-it-works) next for the full loop, or jump to [For partners and judges](/tracks).

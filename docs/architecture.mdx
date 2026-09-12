@@ -1,0 +1,58 @@
+---
+title: "Architecture"
+description: "Five parts, three chains, and why each chain earns its place."
+---
+
+Sigil is a small monorepo. Each piece does one job, and each chain is used for the one thing it is best at.
+
+<Frame caption="The system at a glance. Replace this with your generated diagram (see the prompt in the repo).">
+  <img src="/img/diagram-architecture.png" alt="Sigil system architecture" />
+</Frame>
+
+## The parts
+
+| Part | What it is | Where it lives |
+|---|---|---|
+| **Gateway** | The x402-paid service. Sells skill source, records claims and disputes, runs the verifier, writes to Hedera. | `packages/gateway` |
+| **Agent** | The consumer. Discovers skills, pays over x402, probes them in the sandbox, and disputes what breaks. | `packages/agent` |
+| **Sandbox** | The sealed, deterministic runner. Deny-by-default, produces the trace hash. | `packages/sandbox` |
+| **Contracts** | `SigilStake` (escrow) and `DisputeResolver` on Arc. | `packages/contracts-arc` |
+| **Web** | The public ledger UI: registry, skill pages, claim and dispute screens. | `packages/web` |
+| **Shared / Hedera** | Common types and hashing; the Hedera client for topics, licence NFT, and identity. | `packages/shared`, `packages/hedera` |
+
+## Why three chains
+
+This is the question every judge asks first. The short answer: no single chain does all three jobs well.
+
+| Job | Chain | Why it has to be there |
+|---|---|---|
+| Record every claim, challenge, and outcome | **Hedera Consensus Service** | Sub-cent fees and 3-second finality. On any chain with real gas, writing down every event would cost more than the stake itself. |
+| Mint the licence NFT | **Hedera Token Service** | Native tokens with no contract to deploy or audit. |
+| Sell paid access to a skill | **Hedera x402 (via Blocky402)** | The paid-request rail the Hedera track is built around. Per-call metering at sub-cent cost. |
+| Hold the staked USDC and pay the winner | **Arc** | Stakes are real money. Arc is the USDC-native settlement layer, and its gas is paid in USDC too. |
+| Prove each participant is a distinct human | **World Selfie Check** | Without it, one person funds both sides of a claim and manufactures a track record for free. |
+
+## Personhood is load-bearing, not decoration
+
+Here is the attack Sigil has to stop. One operator opens a claim from wallet A, then disputes it from wallet B with a trace they know will fail to reproduce. They lose the bond back to themselves, and now own a skill with a "survived a challenge" history. Total cost: gas.
+
+Sigil stores the World Selfie Check **nullifier** (a per-person, per-app identifier) on every claim and every dispute. A dispute whose nullifier matches the claim's is refused with `409 — one personhood proof cannot hold both sides of a claim`. The contract also rejects a disputer who is the staker. The rule is tested, and enforced the same way in mock mode and in production.
+
+## Key addresses and IDs
+
+<CardGroup cols={2}>
+  <Card title="Hedera registry topic" icon="hashtag" href="https://hashscan.io/testnet/topic/0.0.10483153">
+    0.0.10483153 — every skill, claim, and identity is announced here.
+  </Card>
+  <Card title="Licence NFT (HTS)" icon="id-card" href="https://hashscan.io/testnet/token/0.0.10483154">
+    0.0.10483154 — minted to each payer on settlement.
+  </Card>
+  <Card title="SigilStake (Arc)" icon="vault" href="https://testnet.arcscan.app/address/0x66fc6324ea9afd68a15f2f68ee5b3083391566fe">
+    0x66fc6324…1566fe — holds the staked USDC and pays the winner.
+  </Card>
+  <Card title="DisputeResolver (Arc)" icon="gavel" href="https://testnet.arcscan.app/address/0xb741a78b1de72c81546f3d4d988bd4820d56e1a8">
+    0xb741a78b…56e1a8 — records the verifier's verdict on-chain.
+  </Card>
+</CardGroup>
+
+The deep contract of every HTTP route, ABI, and HCS message is in [`ARCHITECTURE.md`](https://github.com/sm-xd/sigil/blob/main/ARCHITECTURE.md) in the repo.

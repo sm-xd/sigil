@@ -1,0 +1,64 @@
+---
+title: "Run it yourself"
+description: "Open the hosted app, buy a skill, or run the whole thing locally."
+---
+
+There are three ways in, from fastest to fullest.
+
+## 1. Just open the hosted app
+
+Nothing to install.
+
+<CardGroup cols={2}>
+  <Card title="Web app" icon="globe" href="https://dr7shuhqdeo3p.cloudfront.net">
+    Browse the registry, open a skill, press "Request the source" to see the live paywall.
+  </Card>
+  <Card title="Gateway API" icon="server" href="https://d32gga9078v6q0.cloudfront.net/skills">
+    The raw discovery directory the agent reads.
+  </Card>
+</CardGroup>
+
+## 2. Buy and run a real skill (one command)
+
+This pays a real testnet micro-payment, takes the licence, and saves the skill's files locally. It targets the hosted gateway out of the box.
+
+```bash
+git clone https://github.com/sm-xd/sigil && cd sigil
+pnpm install
+# fill .env with a Hedera testnet operator account (see .env.example)
+E2E_FRESH_PAYER=1 pnpm buy slugify
+```
+
+You will see the `402`, the payment settle on Hedera, a licence NFT minted, and the files written under `downloads/slugify/`.
+
+## 3. Run the whole loop locally
+
+This runs the full cycle: seed a claim with staked USDC on Arc, then have the agent discover it, pay, probe it in the sandbox, dispute the violation, and settle on-chain.
+
+```bash
+export PATH="$HOME/.nvm/versions/node/v22.13.0/bin:$HOME/.foundry/bin:$PATH"
+pnpm install && cp .env.example .env      # fill the keys — see RUN.md
+pnpm hedera:bootstrap                      # Hedera topics, licence NFT, agent identity
+pnpm deploy                                # SigilStake + DisputeResolver on Arc testnet
+pnpm gateway                               # the x402 service on :4021
+SEED_STAKE_USDC=10 SEED_ONCHAIN_SKILLS=cloud-helper pnpm seed
+pnpm web                                    # the ledger UI on :3000
+POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e   # the agent, end to end
+```
+
+<Note>
+Every command, every environment variable, every expected log line, and the hosted-on-AWS setup are documented in full in the repo's [`RUN.md`](https://github.com/sm-xd/sigil/blob/main/RUN.md).
+</Note>
+
+## The demo, in one line
+
+The showpiece is a visitor using a skill that has money behind it:
+
+1. Open the registry, click the skill with USDC staked on Arc.
+2. Press **Request the source** — the `402` paywall appears.
+3. In a terminal, run `E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e`.
+4. Watch the payment land, the sandbox find the violation, and the 12.5 USDC pot move on Arc — all on screen.
+
+<Frame caption="A settled dispute: the pot has moved to the winner and the outcome is stamped.">
+  <img src="/img/dispute-settled.png" alt="A settled dispute on the money panel" />
+</Frame>
