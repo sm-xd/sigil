@@ -13,28 +13,28 @@
       {
         "group": "Start here",
         "pages": [
-          "introduction",
-          "how-it-works",
-          "architecture"
+          "docs/introduction",
+          "docs/how-it-works",
+          "docs/architecture"
         ]
       },
       {
         "group": "How the money moves",
         "pages": [
-          "x402-payments",
-          "whats-real"
+          "docs/x402-payments",
+          "docs/whats-real"
         ]
       },
       {
         "group": "For partners and judges",
         "pages": [
-          "tracks"
+          "docs/tracks"
         ]
       },
       {
         "group": "Run it yourself",
         "pages": [
-          "run-it"
+          "docs/run-it"
         ]
       }
     ]
