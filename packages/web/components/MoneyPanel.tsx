@@ -120,7 +120,7 @@ export function MoneyPanel({ claimId, skillId }: { claimId: string; skillId: str
         <dl className="mono grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-12">
           <dt className="text-ink-2">reproduced</dt><dd className={verdict.reproduced ? "text-seal" : ""}>{String(verdict.reproduced)}</dd>
           <dt className="text-ink-2">observedHash</dt><dd><Hash v={verdict.observedHash} head={16} tail={8} /></dd>
-          <dt className="text-ink-2">verdictTx</dt><dd>{verdict.verdictTxHash ? <Ext href={arcTx(verdict.verdictTxHash)}>{short(verdict.verdictTxHash, 10, 6)}</Ext> : "not posted (resolver undeployed)"}</dd>
+          <dt className="text-ink-2">verdictTx</dt><dd>{verdict.verdictTxHash ? <Ext href={arcTx(verdict.verdictTxHash)}>{short(verdict.verdictTxHash, 10, 6)}</Ext> : escrow ? "not posted (resolver undeployed)" : "not posted (off-chain record)"}</dd>
         </dl>
       ) : null}
     </section>

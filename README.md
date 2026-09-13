@@ -146,6 +146,8 @@ You need Node 22 and a Hedera testnet account, nothing else. The full walkthroug
 
 ![A settled dispute: the pot has moved to the winner and the outcome is stamped](docs/img/dispute-settled.png)
 
+![Register a skill: pick an example or paste code; the id is the hash of the source, the bundle is pinned on Hedera](docs/img/register.png)
+
 The app is a printed ledger, not a dashboard: warm paper, ink text, one seal-red accent for capital at risk.
 
 ## What is live on testnet
@@ -203,7 +205,7 @@ packages/contracts-arc/   SigilStake escrow, DisputeResolver + AttestorResolver,
 packages/gateway/         the x402 service: discovery, claims and disputes, the verifier, the consumption ledger
 packages/agent/           discover, decide, pay over x402, probe in the sandbox, auto-dispute; the Circle wallet
 packages/web/             the paper-and-ink ledger UI (Next.js): registry, register a skill, skill, claim, dispute
-examples/                 five small skills to register from the UI or the CLI; each holds some rules and breaks one
+examples/                 eleven small skills to register from the UI or the CLI; five touch nothing, six each break one rule
 scripts/                  seed, e2e, deploy, hedera bootstrap, determinism proof, buy
 docs/                     the documentation site (Mintlify)
 ```
