@@ -1,22 +1,22 @@
 ---
 title: "Tracks and evidence"
-description: "The three bounties Sigil targets, what each one asks for, and the proof it is done."
+description: "The three tracks Sigil targets, what each one asks for, and the proof it is done."
 ---
 
-Sigil is built for three tracks at once. Each chain in the design maps to a real bounty requirement, not a checkbox. Here is exactly what each track asks for and where the proof lives.
+Sigil targets three tracks. For each one: what it asks for, whether it is done, and where the proof is.
 
 <Note>
 Legend: **Met** = done and verifiable on testnet today. **Pending** = a deliverable only the team can finish (a video, a mainnet deploy, or access we are waiting on).
 </Note>
 
-## Hedera — AI & Agentic Payments ($6,000)
+## Hedera: AI & Agentic Payments
 
 The core requirement: a live x402-paid service on Hedera testnet, settled through Blocky402, with an agent that completes a real paid request.
 
 | Requirement | Status | Evidence |
 |---|---|---|
 | Live x402 service on Hedera testnet, settled by Blocky402 | **Met** | The [gateway](https://d32gga9078v6q0.cloudfront.net/health) refuses to start unless Blocky402 lists `hedera:testnet`. |
-| An agent consuming it, ≥ 1 real paid request | **Met** | Twelve settled requests. See [Paid access over x402](/x402-payments). |
+| An agent consuming it, ≥ 1 real paid request | **Met** | Twelve settled requests. See [Paid access over x402](/docs/x402-payments). |
 | Public repo with README on setup, architecture, payment flow | **Met** | [github.com/sm-xd/sigil](https://github.com/sm-xd/sigil) |
 | Demo video ≤ 5 minutes | **Pending** | Shot list ready in the repo's `DEMO.md`. |
 | Extra: per-call metering | **Met** | Priced per kilobyte, not a flat fee. |
@@ -25,14 +25,14 @@ The core requirement: a live x402-paid service on Hedera testnet, settled throug
 | Extra: HTS in the settlement path | **Met** | USDC token `0.0.429274` moves, and a licence NFT is minted. |
 | Extra: verifiable audit trail on HCS | **Met** | Every claim, payment, and outcome is a Hedera message. |
 
-## Arc — Best Agentic Economy with Circle Agent Stack ($3,500)
+## Arc: Best Agentic Economy with Circle Agent Stack
 
 The core requirement: agents that hold their own Circle wallets and settle their own on-chain actions, backed by a real frontend and backend.
 
 | Requirement | Status | Evidence |
 |---|---|---|
 | Working frontend **and** backend | **Met** | [Live web app](https://dr7shuhqdeo3p.cloudfront.net) plus the gateway and agent. |
-| Architecture diagram in the repo | **Met** | See [Architecture](/architecture) and `ARCHITECTURE.md`. |
+| Architecture diagram in the repo | **Met** | See [Architecture](/docs/architecture) and `ARCHITECTURE.md`. |
 | Video plus presentation | **Pending** | Team deliverable. |
 | Agent Stack connects agents to wallets and on-chain actions | **Met** | The agent's `approve`, `dispute`, and `resolve` are `circle wallet execute` operations from wallet [0xf6ede051…b2e0](https://testnet.arcscan.app/address/0xf6ede0518f7543715322cf7bd420aa6a7732b2e0). |
 | Agents with decision logic tied to real signals | **Met** | The agent disputes only on a reproduced sandbox violation. |
@@ -41,7 +41,7 @@ The core requirement: agents that hold their own Circle wallets and settle their
 
 The full settlement cycle has run **five times** from the Circle Agent Stack wallet: stake 10 USDC, post a 2.5 USDC bond, win 12.5 USDC. Example resolve on Arc: [0xf9d4506f…](https://testnet.arcscan.app/tx/0xf9d4506fb3ac405769860e3ab4c34321e72a1f54a4cd7e2f3eeca04cdad5c1f1).
 
-## World — Selfie Check ($3,500)
+## World: Selfie Check
 
 The core requirement: use Selfie Check as a meaningful abuse-prevention signal, in a working app, with a written feedback document.
 
@@ -52,5 +52,5 @@ The core requirement: use Selfie Check as a meaningful abuse-prevention signal, 
 | Written feedback document | **Met** | [`FEEDBACK-WORLD.md`](https://github.com/sm-xd/sigil/blob/main/FEEDBACK-WORLD.md) — first-hand notes on the docs, portal, and integration. |
 
 <Note>
-Why the mock: the both-sides attack is the reason personhood is load-bearing (see [Architecture](/architecture)). The enforcement is real and tested today; only the live Selfie Check call waits on Sandbox tester access, and every screen says so plainly.
+Why the mock: the both-sides rule is what makes personhood matter (see [Architecture](/docs/architecture)). That rule is real and tested today. Only the live Selfie Check call waits on Sandbox tester access, and every screen says so.
 </Note>

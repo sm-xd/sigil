@@ -33,16 +33,15 @@ You will see the `402`, the payment settle on Hedera, a licence NFT minted, and 
 
 ## 3. Run the whole loop locally
 
-This runs the full cycle: seed a claim with staked USDC on Arc, then have the agent discover it, pay, probe it in the sandbox, dispute the violation, and settle on-chain.
+This runs the full cycle: seed a claim with staked USDC on Arc, then have the agent discover it, pay, probe it in the sandbox, dispute the violation, and settle on-chain. You need Node 22.13, pnpm and Foundry installed.
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v22.13.0/bin:$HOME/.foundry/bin:$PATH"
-pnpm install && cp .env.example .env      # fill the keys — see RUN.md
+pnpm install && cp .env.example .env      # fill the keys, see RUN.md
 pnpm hedera:bootstrap                      # Hedera topics, licence NFT, agent identity
 pnpm deploy                                # SigilStake + DisputeResolver on Arc testnet
 pnpm gateway                               # the x402 service on :4021
 SEED_STAKE_USDC=10 SEED_ONCHAIN_SKILLS=cloud-helper pnpm seed
-pnpm web                                    # the ledger UI on :3000
+pnpm web                                   # the ledger UI on :3000
 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e   # the agent, end to end
 ```
 
@@ -50,7 +49,7 @@ POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e   # the agent, end 
 Every command, every environment variable, every expected log line, and the hosted-on-AWS setup are documented in full in the repo's [`RUN.md`](https://github.com/sm-xd/sigil/blob/main/RUN.md).
 </Note>
 
-## The demo, in one line
+## The demo
 
 The showpiece is a visitor using a skill that has money behind it:
 

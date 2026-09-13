@@ -3,7 +3,7 @@ title: "What is real vs stubbed"
 description: "An honest map of what runs live on testnet today and the one thing that is still a labelled mock."
 ---
 
-Sigil is honest about its own status. Almost everything runs live on testnet and is verifiable right now. Exactly one thing is a mock, and it is labelled as such on every screen.
+Almost everything runs live on testnet and can be checked right now. One thing is a mock, and every screen labels it.
 
 ## Real and verified
 
@@ -40,9 +40,7 @@ Sigil is honest about its own status. Almost everything runs live on testnet and
 **World Selfie Check runs as a labelled mock** until Sandbox tester access lands. The abuse-prevention rule it feeds — one person cannot hold both sides of a claim — is fully built, enforced, and tested. Only the live selfie call is stubbed, and the UI says "Mock Selfie Check" wherever it appears.
 </Warning>
 
-## Known limitations (on purpose)
-
-We would rather name these than hide them:
+## Known limitations
 
 - **The gateway keeps its live index in a single JSON file.** Hedera is the durable audit log; the file is a fast cache. One gateway instance, not a cluster.
 - **The browser-signed wallet flows** on the claim and dispute pages are written and type-checked but were driven end-to-end by the agent and the seed, not yet from a browser wallet.
