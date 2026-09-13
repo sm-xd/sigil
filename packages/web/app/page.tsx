@@ -71,6 +71,9 @@ function Cell({ label, className = "", children }: { label: string; className?: 
   );
 }
 
+const DOCS_URL = "https://sigil-docs-568611a1.mintlify.app";
+const REPO_URL = "https://github.com/sm-xd/sigil";
+
 export default function Landing() {
   const live = useQuery({ queryKey: ["live"], queryFn: loadLive, refetchInterval: 10_000 });
   const d = live.data;
@@ -86,6 +89,7 @@ export default function Landing() {
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <Link href="/registry" className="btn btn-seal">Open the registry</Link>
             <a href="#proof" className="link text-14">Read the proof</a>
+            <a href={DOCS_URL} className="link text-14" target="_blank" rel="noreferrer">Read the docs</a>
           </div>
         </div>
       </section>
@@ -161,6 +165,11 @@ export default function Landing() {
         <div>
           <p className="text-14 text-ink-2">The full cycle, end to end, against Hedera testnet and Arc testnet:</p>
           <pre className="mt-3 overflow-x-auto text-13">E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e</pre>
+          <p className="mt-4 text-13 text-ink-2">
+            <a href={DOCS_URL} className="link" target="_blank" rel="noreferrer">Documentation</a>
+            <span className="mx-2">·</span>
+            <a href={REPO_URL} className="link" target="_blank" rel="noreferrer">Source on GitHub</a>
+          </p>
         </div>
       </footer>
     </div>
