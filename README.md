@@ -27,7 +27,7 @@ public explorer.
 | Demo script | [DEMO.md](DEMO.md) |
 | Architecture and contracts | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
-![Architecture: the gateway and agent off-chain, the three chains they settle on](docs/img/diagram-architecture.png)
+![Architecture: participants on top, the gateway, sandbox, web app and agent in the middle, Hedera, Arc and World underneath, with the seven numbered lifecycle steps as money, data and proof flows](docs/img/diagram-architecture.png)
 
 ## What happens, step by step
 
@@ -118,6 +118,26 @@ every claim and dispute and refuses a dispute whose nullifier matches the claim'
 - First-hand integration feedback for the World team: [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md).
 - Status: live Selfie Check runs as a **labelled mock** until Sandbox tester access lands; the enforcement it feeds is
   real today, and every screen says so.
+
+### Open Source: Improve the Hedera Harness
+
+**What we built.** Two fixes to [hedera-dev/hedera-harness](https://github.com/hedera-dev/hedera-harness), both
+found in the first hour of pointing the harness at Sigil's gateway and both opened as pull requests against `dev`
+(2.0.0-rc.4) from this account. Each carries tests and before/after output in its description.
+
+**Where to look.**
+
+- [PR #75](https://github.com/hedera-dev/hedera-harness/pull/75) `fix(smoke): poll server.url for readiness instead
+  of waiting for a Local: line`. The SMOKE stage took the dev server's URL from a `Local: http://…` log line, which
+  Next and Vite print and Express, Fastify, Hono and Koa do not, so Sigil's gateway (up in two seconds, logging
+  `[gateway] listening on …`) sat out a 30 s timer and failed. The recipe's `server.url` is now polled for readiness
+  and the log line is a fallback. `+388 / -70` across 4 files.
+- [PR #76](https://github.com/hedera-dev/hedera-harness/pull/76) `fix(preflight): a recipe file that does not parse
+  fails doctor and run, not ASSERT after a paid generator session`. `doctor` and `run` checked that validator files
+  exist but never opened them, so a trailing comma in `static.json` surfaced only after a paid agent session.
+  Preflight now parses every file the recipe points at and fails before any money is spent. `+465 / -15` across 8
+  files.
+- Both are open (merge is not required by the track); CI on fork PRs waits for a maintainer approval gate.
 
 ## Try it in a few minutes
 
