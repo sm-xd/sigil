@@ -5,7 +5,7 @@
   "description": "A trust layer for AI agent skills: stake USDC on what a skill does, lose it when the evidence goes against you.",
   "colors": {
     "primary": "#B3261E",
-    "light": "#E0574F",
+    "light": "#F26B5B",
     "dark": "#8A1219"
   },
   "navigation": {
@@ -55,6 +55,16 @@
   "footer": {
     "socials": {
       "github": "https://github.com/sm-xd/sigil"
+    }
+  },
+  "appearance": {
+    "default": "light",
+    "strict": true
+  },
+  "background": {
+    "color": {
+      "light": "#F4F1EA",
+      "dark": "#0B0B0C"
     }
   }
 }
