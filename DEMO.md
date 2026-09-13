@@ -9,7 +9,7 @@ Before recording:
 
 - A browser window at 1440 px wide on the landing page. No wallet extension is needed: every step below is an
   off-chain record except the ones that only read Arc.
-- A terminal in the repo with `.env` pointing `GATEWAY_URL` at the hosted gateway and the agent account holding at
+- A terminal in the repo on Node 22.13 (`nvm use` reads `.nvmrc`; pnpm refuses older Node) with `.env` pointing `GATEWAY_URL` at the hosted gateway and the agent account holding at
   least 2 USDC and a few HBAR on Hedera testnet (`E2E_FRESH_PAYER=1` hands a throwaway payer 2 USDC from it). Run
   `E2E_FRESH_PAYER=1 pnpm buy cloud-helper` once before recording so you know Blocky402 is answering today; it is
   intermittently unreachable, and the fix is to wait a minute and retry.
