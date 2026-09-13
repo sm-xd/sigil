@@ -16,6 +16,7 @@
     "seed": "tsx scripts/seed.ts",
     "e2e": "tsx scripts/e2e.ts",
     "buy": "tsx scripts/buy.ts",
+    "register": "tsx scripts/register.ts",
     "deploy": "tsx scripts/deploy.ts",
     "hedera:bootstrap": "tsx scripts/hedera-bootstrap.ts"
   },

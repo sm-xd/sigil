@@ -1,0 +1,5 @@
+{
+  "name": "word-count",
+  "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
+  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
+}
