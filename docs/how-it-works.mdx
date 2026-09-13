@@ -5,13 +5,9 @@ description: "One claim, from the money going in to the money moving out, in fiv
 
 A claim about a skill has a whole life: it is opened with money behind it, an agent buys and tests the skill, and if the skill misbehaves the money moves. Here is that loop, start to finish.
 
-```mermaid
-flowchart TB
-  A["1 · Claim<br/>stake USDC on Arc"] --> B["2 · Consume<br/>agent pays x402 on Hedera"]
-  B --> C["3 · Probe<br/>deterministic sandbox"]
-  C --> D["4 · Dispute<br/>bond + trace on-chain"]
-  D --> E["5 · Settle<br/>verifier re-runs, money moves"]
-```
+<Frame caption="How a claim lives and dies: staked on Arc, bought over x402, probed in the sandbox, disputed with a bond, settled by a re-run.">
+  <img src="/docs/img/diagram-claim-lifecycle.png" alt="The five-step claim lifecycle" />
+</Frame>
 
 <Steps>
   <Step title="Claim — lock the money on Arc">

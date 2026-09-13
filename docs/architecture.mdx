@@ -5,17 +5,9 @@ description: "Five parts, three chains, and why each chain earns its place."
 
 Sigil is a small monorepo. Each piece does one job, and each chain is used for the one thing it is best at.
 
-```mermaid
-flowchart TB
-  Web["Web app"] --> GW["Gateway<br/>(x402 service + verifier)"]
-  Agent["Agent"] --> GW
-  Agent --> SB["Sandbox<br/>(deny-by-default)"]
-  Agent --> Circle["Circle Agent Stack wallet"]
-  GW --> Hedera[("Hedera<br/>HCS · HTS · x402")]
-  Circle --> Arc[("Arc<br/>SigilStake escrow")]
-  GW --> Arc
-  Web --> World["World<br/>Selfie Check"]
-```
+<Frame caption="The system at a glance: web, gateway, agent and sandbox off-chain; Hedera, Arc and World underneath. The red arrow is the money path.">
+  <img src="/docs/img/diagram-architecture.png" alt="Sigil system architecture" />
+</Frame>
 
 ## The parts
 
