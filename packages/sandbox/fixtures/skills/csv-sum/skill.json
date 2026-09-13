@@ -1,5 +1,6 @@
 {
   "name": "csv-sum",
+  "description": "sums a CSV column from stdin; touches nothing",
   "author": "0x3333333333333333333333333333333333333333",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
   "claims": [

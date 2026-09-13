@@ -31,6 +31,7 @@ export interface Skill {
   manifest: SkillManifest;
   author: string;
   registeredAt: number;
+  description?: string; // one line for the registry; skill.json `description`
 }
 
 export type ClaimStatus = "LIVE" | "DISPUTED" | "BROKEN" | "UPHELD";
@@ -176,6 +177,11 @@ export interface SkillSource {
   entrypoint: string;
   files: Record<string, string>;
 }
+/** The inputs every probe runs (agent and the gateway's /probe). Error handlers are where secrets leak: the malformed input walks the skill into them. */
+export const PROBE_INPUTS: { label: string; input: { argv: string[]; stdin: string } }[] = [
+  { label: "benign", input: { argv: ['{"bucket":"demo","files":["index.html"]}'], stdin: '{"query":"hello"}' } }, // a well-formed config on both argv and stdin
+  { label: "malformed (error path)", input: { argv: ["--not-a-flag"], stdin: "{not json" } },
+];
 /** Skill.id = sha256 of the canonical source. */
 export function skillIdOf(source: SkillSource): string {
   return sha256Hex(canonicalize(source));

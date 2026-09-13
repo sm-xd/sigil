@@ -2,5 +2,18 @@
   "name": "word-count",
   "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
   "description": "counts the words on stdin; touches nothing, every rule holds",
-  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
+  "manifest": {
+    "entrypoint": "index.js",
+    "declaredEnv": [],
+    "declaredHosts": []
+  },
+  "claims": [
+    {
+      "predicate": {
+        "kind": "NO_ENV_READ_OUTSIDE",
+        "allowlist": []
+      },
+      "stakeAmount": "15"
+    }
+  ]
 }

@@ -5,8 +5,9 @@ import type { Server } from "node:http";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type RequestHandler, type Response } from "express";
-import { canonicalize, claimIdOf, NO_ALLOWLIST_KINDS, PREDICATE_KINDS, sha256Hex, skillIdOf, traceHashOf, type Claim, type Predicate, type Skill, type SkillManifest, type SkillSource, type TraceBundle, type TraceEvent } from "@sigil/shared";
+import { canonicalize, claimIdOf, NO_ALLOWLIST_KINDS, PREDICATE_KINDS, PROBE_INPUTS, sha256Hex, skillIdOf, traceHashOf, type Claim, type Predicate, type Skill, type SkillManifest, type SkillSource, type TraceBundle, type TraceEvent } from "@sigil/shared";
 import { createTopic, uploadHcs1 } from "@sigil/hedera";
+import { runSkill, type RunResult } from "@sigil/sandbox";
 import { assertBlocky402, facilitatorUrl, x402Network } from "./blocky402.ts";
 import { HttpError, hcs, registryTopic, save, state, type StoredDispute, type StoredSkill } from "./state.ts";
 import { priceFor, sourceBytes, x402Middleware } from "./x402.ts";
@@ -156,16 +157,20 @@ export function createApp() {
   });
 
   app.post("/skills", h(async (req, res) => {
-    const { name, source, manifest, author } = (req.body ?? {}) as Record<string, unknown>;
-    if (!isStr(name) || !isSource(source) || !isManifest(manifest) || !isStr(author))
-      throw new HttpError(400, "body: { name, source: { entrypoint, files }, manifest: { entrypoint, declaredEnv, declaredHosts }, author }");
+    const { name, source, manifest, author, description } = (req.body ?? {}) as Record<string, unknown>;
+    if (!isStr(name) || !isSource(source) || !isManifest(manifest) || !isStr(author) || (description !== undefined && typeof description !== "string"))
+      throw new HttpError(400, "body: { name, source: { entrypoint, files }, manifest: { entrypoint, declaredEnv, declaredHosts }, author, description? }");
     if (manifest.entrypoint !== source.entrypoint) throw new HttpError(400, "manifest.entrypoint must equal source.entrypoint");
     const id = skillIdOf(source);
-    if (state.skills[id]) { res.json(publicSkill(state.skills[id])); return; } // idempotent (seed re-runs)
+    const known = state.skills[id];
+    if (known) { // idempotent (seed re-runs); a description arriving later fills the blank, never overwrites
+      if (!known.description && isStr(description)) { known.description = description; save(); }
+      res.json(publicSkill(known)); return;
+    }
     let sourceUri = `local:${id}`; // ponytail: when the HCS-1 upload fails the source lives only in the local index.
     try { sourceUri = (await uploadHcs1(Buffer.from(canonicalize(source)), "application/json")).hrl; }
     catch (e) { console.warn(`[skills] HCS-1 upload failed (non-fatal): ${(e as Error).message}`); }
-    const skill: StoredSkill = { id, name, sourceUri, manifest, author, registeredAt: Date.now(), source };
+    const skill: StoredSkill = { id, name, sourceUri, manifest, author, registeredAt: Date.now(), source, ...(isStr(description) ? { description } : {}) };
     state.skills[id] = skill;
     save();
     await hcs(registryTopic(), "SKILL_REGISTERED", "", publicSkill(skill));
@@ -195,6 +200,20 @@ export function createApp() {
     await hcs(registryTopic(), "CLAIM_OPENED", id, claim);
     if (hcsTopicId) await hcs(hcsTopicId, "CLAIM_OPENED", id, claim);
     res.status(201).json(claim);
+  }));
+
+  // Run the claim's skill in the sandbox here, so a browser can produce dispute evidence without the repo.
+  // Same inputs as the agent; returns the first bundle that breaks the predicate, else the last one.
+  // ponytail: no rate limit; the sandbox's 10 s timeout bounds one call, upgrade to a queue if it is abused.
+  app.post("/claims/:id/probe", h(async (req, res) => {
+    const claim = claimOr404(req.params.id);
+    const skill = skillOr404(claim.skillId);
+    let last: RunResult | null = null;
+    for (const { input } of PROBE_INPUTS) {
+      last = await runSkill({ skillId: skill.id, source: skill.source, predicate: claim.predicate, input });
+      if (last.violations.length) break;
+    }
+    res.json(last);
   }));
 
   app.post("/claims/:id/dispute", h(async (req, res) => {

@@ -1,0 +1,23 @@
+{
+  "name": "changelog-stamp",
+  "author": "0x4539e4b4889079c2a00afeae0bfc1439840ef237",
+  "description": "prefixes stdin with a release header; declares RELEASE_TAG but also reads USER, breaks NO_ENV_READ_OUTSIDE",
+  "manifest": {
+    "entrypoint": "index.js",
+    "declaredEnv": [
+      "RELEASE_TAG"
+    ],
+    "declaredHosts": []
+  },
+  "claims": [
+    {
+      "predicate": {
+        "kind": "NO_ENV_READ_OUTSIDE",
+        "allowlist": [
+          "RELEASE_TAG"
+        ]
+      },
+      "stakeAmount": "35"
+    }
+  ]
+}

@@ -87,7 +87,6 @@ export function MoneyPanel({ claimId, skillId }: { claimId: string; skillId: str
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b border-rule-2 pb-2">
         <h2 className="display text-20">Money</h2>
         <Stamp s={claim.status} />
-        <span className="mono ml-auto text-12 text-ink-3">{q.isFetching ? "polling…" : "polls every 3 s"}</span>
       </div>
       <div className="grid grid-cols-2 py-4">{col("staker")}{col("disputer")}</div>
       <div className="rule relative overflow-hidden py-3">

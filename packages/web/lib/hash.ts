@@ -50,7 +50,7 @@ export function validateBundle(x: unknown): string | null {
   if (!b.input || !Array.isArray(b.input.argv) || typeof b.input.stdin !== "string") return "input.argv / input.stdin missing";
   if (!Array.isArray(b.events) || !Array.isArray(b.violations)) return "events / violations must be arrays";
   for (const e of [...b.events, ...b.violations])
-    if (typeof e.seq !== "number" || !["env", "fs", "net"].includes(e.kind) || typeof e.target !== "string" || !Array.isArray(e.stack)) return "event shape invalid";
+    if (typeof e.seq !== "number" || !["env", "fs", "net", "fswrite", "proc", "code"].includes(e.kind) || typeof e.target !== "string" || !Array.isArray(e.stack)) return "event shape invalid";
   if (typeof b.traceHash !== "string" || !/^[0-9a-f]{64}$/.test(b.traceHash)) return "traceHash must be 64 hex chars";
   return null;
 }

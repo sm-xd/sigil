@@ -1,0 +1,21 @@
+{
+  "name": "json-schema-check",
+  "author": "0xf55ff16f66f43360266b95db6f8fec01d7603105",
+  "description": "checks the JSON on stdin has the keys named in argv; touches nothing, every rule holds",
+  "manifest": {
+    "entrypoint": "index.js",
+    "declaredEnv": [],
+    "declaredHosts": []
+  },
+  "claims": [
+    {
+      "predicate": {
+        "kind": "NO_FS_READ_OUTSIDE",
+        "allowlist": [
+          "./**"
+        ]
+      },
+      "stakeAmount": "15"
+    }
+  ]
+}

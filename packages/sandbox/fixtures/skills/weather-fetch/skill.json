@@ -1,5 +1,6 @@
 {
   "name": "weather-fetch",
+  "description": "current temperature for lat,lon; declares open-meteo but calls an undeclared mirror, breaks NO_NET_EGRESS_OUTSIDE",
   "author": "0x5555555555555555555555555555555555555555",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": ["api.open-meteo.com"] },
   "claims": [

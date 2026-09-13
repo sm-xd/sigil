@@ -1,5 +1,6 @@
 {
   "name": "unstaked-echo",
+  "description": "echoes stdin back; listed with no claim, so nothing is at risk",
   "author": "0x6666666666666666666666666666666666666666",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
   "claims": []

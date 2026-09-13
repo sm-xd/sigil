@@ -54,13 +54,16 @@ export async function requestSource(id: string): Promise<{ status: 402; paywall:
   return { status: 200, bytes: new Blob([text]).size };
 }
 /** Register a skill. The gateway hashes the canonical source into the id, so re-posting the same files is a 200 with the same skill. */
-export async function postSkill(b: { name: string; author: string; manifest: SkillManifest; source: SkillSource }): Promise<{ skill: Skill; created: boolean }> {
+export async function postSkill(b: { name: string; author: string; description?: string; manifest: SkillManifest; source: SkillSource }): Promise<{ skill: Skill; created: boolean }> {
   const res = await fetch(`${BASE}/skills`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
   const json = (await res.json().catch(() => ({}))) as Skill & { error?: string };
   if (!res.ok) throw new ApiError(res.status, json.error ?? `${res.status} ${res.statusText}`);
   return { skill: json, created: res.status === 201 };
 }
 export const postClaim = (b: { skillId: string; predicate: Predicate; stakeAmount: string; stakedBy: string; arcTxHash: string; worldProof: WorldProof; nonce: string }) => call<Claim>("/claims", b);
+/** The gateway runs the claim's skill in its sandbox (the agent's two inputs; first violating run wins) and returns the bundle plus the skill's output. */
+export type ProbeResult = TraceBundle & { stdout: string; stderr: string; exitCode: number | null };
+export const postProbe = (claimId: string) => call<ProbeResult>(`/claims/${claimId}/probe`, {});
 export const postDispute = (claimId: string, b: { by: string; counterBond: string; traceBundle: TraceBundle; arcTxHash: string; worldProof: WorldProof }) => call<Dispute>(`/claims/${claimId}/dispute`, b);
 export const postResolve = (claimId: string) => call<{ reproduced: boolean; observedHash: string; verdictTxHash: string }>(`/claims/${claimId}/resolve`, {});
 export const postResolved = (claimId: string, arcTxHash: string) => call<Resolution>(`/claims/${claimId}/resolved`, { arcTxHash });

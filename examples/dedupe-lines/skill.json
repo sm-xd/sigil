@@ -1,7 +1,7 @@
 {
-  "name": "template-render",
-  "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
-  "description": "fills a template with new Function(); breaks NO_DYNAMIC_CODE",
+  "name": "dedupe-lines",
+  "author": "0xf46dd28a5499d8efef0b8fb8ee1ec1c5a5e407c9",
+  "description": "drops repeated lines from stdin, first occurrence wins; touches nothing, every rule holds",
   "manifest": {
     "entrypoint": "index.js",
     "declaredEnv": [],
@@ -13,7 +13,7 @@
         "kind": "NO_DYNAMIC_CODE",
         "allowlist": []
       },
-      "stakeAmount": "30"
+      "stakeAmount": "10"
     }
   ]
 }

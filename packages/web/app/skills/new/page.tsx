@@ -33,28 +33,30 @@ export default function NewSkill() {
 
   const [name, setName] = useState("");
   const [author, setAuthor] = useState("");
+  const [description, setDescription] = useState("");
   const [entrypoint, setEntrypoint] = useState("index.js");
   const [declaredEnv, setDeclaredEnv] = useState("");
   const [declaredHosts, setDeclaredHosts] = useState("");
   const [code, setCode] = useState("");
-  const [extra, setExtra] = useState<Record<string, string>>({}); // an example's other files, carried along unchanged
+  const [extra, setExtra] = useState<{ name: string; content: string }[]>([]); // the bundle's other files: an example's, or added here
   const [steps, setSteps] = useState<Step[]>([]);
   const [done, setDone] = useState<{ id: string; created: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const by = author || address || "";
-  const source: SkillSource = { entrypoint, files: { ...extra, [entrypoint]: code } };
+  const source: SkillSource = { entrypoint, files: { ...Object.fromEntries(extra.filter((f) => f.name.trim()).map((f) => [f.name.trim(), f.content])), [entrypoint]: code } };
   const id = code && entrypoint ? skillIdOf(source) : "";
   const ready = !!name.trim() && !!entrypoint.trim() && !!code.trim() && !!by && !busy && !done;
 
   const load = (ex: Example) => {
-    setName(ex.name); setAuthor(ex.author); setEntrypoint(ex.manifest.entrypoint);
+    setName(ex.name); setAuthor(ex.author); setDescription(ex.description); setEntrypoint(ex.manifest.entrypoint);
     setDeclaredEnv(ex.manifest.declaredEnv.join(", ")); setDeclaredHosts(ex.manifest.declaredHosts.join(", "));
     const { [ex.manifest.entrypoint]: main = "", ...rest } = ex.files;
-    setCode(main); setExtra(rest); setSteps([]); setDone(null);
+    setCode(main); setExtra(Object.entries(rest).map(([name, content]) => ({ name, content }))); setSteps([]); setDone(null);
   };
 
   const setStep = (i: number, patch: Partial<Step>) => setSteps((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const patchExtra = (i: number, patch: Partial<{ name: string; content: string }>) => setExtra((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const submit = async () => {
     if (!ready) return;
     setBusy(true);
@@ -65,7 +67,7 @@ export default function NewSkill() {
       { label: "SKILL_REGISTERED on the registry topic", state: "idle" },
     ]);
     try {
-      const r = await postSkill({ name: name.trim(), author: by, manifest, source });
+      const r = await postSkill({ name: name.trim(), author: by, description: description.trim() || undefined, manifest, source });
       setStep(1, { state: "ok", note: r.skill.sourceUri.startsWith("hcs://") ? <Ext href={hashscanTopic(r.skill.sourceUri.replace("hcs://1/", ""))}>{r.skill.sourceUri}</Ext> : r.skill.sourceUri });
       setStep(2, { state: "ok", note: r.created ? "announced · listed in the registry" : "already registered: same files, same id" });
       setDone({ id: r.skill.id, created: r.created });
@@ -86,7 +88,7 @@ export default function NewSkill() {
       </div>
 
       <form className="page rule-2 gap-y-6 py-7 md:grid-cols-[200px_minmax(0,560px)] md:gap-y-8" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <Field id="example" label="Start from an example" hint="The small skills that ship with the repo. Two touch nothing; the other three each break one rule on purpose, so there is something to stake on either way.">
+        <Field id="example" label="Start from an example" hint="The small skills that ship with the repo. Five touch nothing; the other six each break one rule on purpose, so there is something to stake on either way.">
           <select id="example" className="field" defaultValue="" onChange={(e) => { const ex = examples.data?.find((x) => x.name === e.target.value); if (ex) load(ex); }}>
             <option value="">{examples.isLoading ? "loading…" : "write your own, or pick one"}</option>
             {examples.data?.map((ex) => <option key={ex.name} value={ex.name}>{ex.name}{ex.description ? ` — ${ex.description}` : ""}</option>)}
@@ -95,6 +97,10 @@ export default function NewSkill() {
 
         <Field id="name" label="Name" hint="Shown in the registry. The id is derived from the code, not the name.">
           <input id="name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="word-count" spellCheck={false} autoComplete="off" />
+        </Field>
+
+        <Field id="description" label="Description" hint="One line for the registry: what it does, and which rule it breaks if any. Optional.">
+          <input id="description" className="field" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="counts the words on stdin; touches nothing" spellCheck={false} autoComplete="off" />
         </Field>
 
         <Field id="author" label="Author" hint="The address that published it. Prefilled from the connected wallet; any string the gateway can show is accepted.">
@@ -107,8 +113,22 @@ export default function NewSkill() {
 
         <Field id="code" label="Source" hint="Plain Node.js, CommonJS. This is what gets hashed, pinned and sold over x402.">
           <textarea id="code" className="field mono" rows={14} value={code} onChange={(e) => setCode(e.target.value)} placeholder={'process.stdin.on("data", (c) => process.stdout.write(c));'} spellCheck={false} />
-          {Object.keys(extra).length ? <p className="mono mt-1 text-12 text-ink-2">+ {Object.keys(extra).join(", ")} from the example, included unchanged</p> : null}
           {id ? <p className="mono mt-1 text-12 text-ink-2">id <Hash v={id} head={12} tail={8} /></p> : null}
+        </Field>
+
+        <Field id="files" label="Other files" hint="Anything the entrypoint requires next to it: a data file, a helper module. Same bundle, same hash; the sandbox writes them into the skill's folder.">
+          <div className="space-y-4">
+            {extra.map((f, i) => (
+              <div key={i}>
+                <div className="flex items-center gap-3">
+                  <input aria-label="File name" className="field mono max-w-[260px]" value={f.name} onChange={(e) => patchExtra(i, { name: e.target.value })} placeholder="stopwords.txt" spellCheck={false} autoComplete="off" />
+                  <button type="button" className="link text-12 text-ink-2" onClick={() => setExtra((xs) => xs.filter((_, j) => j !== i))}>remove</button>
+                </div>
+                <textarea aria-label={`Contents of ${f.name || "the file"}`} className="field mono mt-2" rows={6} value={f.content} onChange={(e) => patchExtra(i, { content: e.target.value })} spellCheck={false} />
+              </div>
+            ))}
+            <button type="button" className="link text-13" onClick={() => setExtra((xs) => [...xs, { name: "", content: "" }])}>+ Add a file</button>
+          </div>
         </Field>
 
         <Field id="env" label="Declared env" hint="Comma-separated variables the skill admits it reads. Informational: a claim's allowlist is what someone bets on.">

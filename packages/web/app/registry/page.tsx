@@ -8,7 +8,7 @@ import { Money } from "@/components/Money";
 import { Stamp } from "@/components/Stamp";
 
 export default function Registry() {
-  const q = useQuery({ queryKey: ["skills"], queryFn: getSkills, refetchInterval: 5_000 });
+  const q = useQuery({ queryKey: ["skills"], queryFn: getSkills });
   const skills = q.data ?? [];
   const escrowed = skills.reduce((a, s) => a + BigInt(s.totalEscrowed), 0n);
   const recorded = skills.reduce((a, s) => a + BigInt(s.totalStaked), 0n) - escrowed; // claims with no openClaim tx: recorded, not at risk
@@ -23,11 +23,10 @@ export default function Registry() {
             {recorded > 0n ? <span className="text-ink-3"> · +{usdc(recorded)} recorded off-chain</span> : null}
           </p>
           <Link href="/skills/new" className="link text-13 text-seal">Register a skill</Link>
-          <span className="mono ml-auto text-12 text-ink-3">{q.isFetching ? "polling…" : "polls every 5 s"}</span>
         </div>
         {q.isError ? <p className="mono text-13 text-seal">Gateway unreachable: {(q.error as Error).message}</p> : null}
         {q.isLoading ? <p className="mono text-13 text-ink-3">Loading the registry…</p> : null}
-        {!q.isLoading && !q.isError && !skills.length ? <p className="text-14 text-ink-2">Nothing staked yet. Run <code>pnpm seed</code>.</p> : null}
+        {!q.isLoading && !q.isError && !skills.length ? <p className="text-14 text-ink-2">Nothing listed yet. <Link href="/skills/new" className="link">Register a skill</Link> to start.</p> : null}
         {skills.length ? (
           <Ledger>
             <thead>
@@ -40,7 +39,11 @@ export default function Registry() {
                 const status = s.sustainedDisputes ? "BROKEN" : s.totalEscrowed !== "0" ? "LIVE" : "RECORDED";
                 return (
                   <tr key={s.id} className={unstaked ? "text-ink-3" : ""}>
-                    <td><Link href={`/skills/${s.id}`} className="link whitespace-nowrap font-medium">{s.name}</Link><div className="mono text-12 text-ink-2"><Hash v={s.id} /></div></td>
+                    <td>
+                      <Link href={`/skills/${s.id}`} className="link whitespace-nowrap font-medium">{s.name}</Link>
+                      {s.description ? <div className="max-w-[360px] text-12 text-ink-2">{s.description}</div> : null}
+                      <div className="mono text-12 text-ink-3"><Hash v={s.id} /></div>
+                    </td>
                     <td><Hash v={s.author} /></td>
                     <td className="num">{s.totalEscrowed === "0" ? <span className="text-ink-3">—</span> : <Money v={s.totalEscrowed} tone="seal" unit={false} />}</td>
                     <td className="num">{offChain > 0n ? <Money v={offChain} tone="off" unit={false} /> : <span className="text-ink-3">—</span>}</td>

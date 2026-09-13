@@ -1,7 +1,7 @@
 {
-  "name": "git-status",
-  "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
-  "description": "shells out to git; breaks NO_CHILD_PROCESS",
+  "name": "markdown-toc",
+  "author": "0x2c3a4249d77070058649dbd822dcaf7957586fce",
+  "description": "builds a table of contents from the # headings on stdin; touches nothing, every rule holds",
   "manifest": {
     "entrypoint": "index.js",
     "declaredEnv": [],
@@ -13,7 +13,7 @@
         "kind": "NO_CHILD_PROCESS",
         "allowlist": []
       },
-      "stakeAmount": "40"
+      "stakeAmount": "12"
     }
   ]
 }

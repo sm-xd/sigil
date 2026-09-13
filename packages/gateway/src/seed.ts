@@ -10,7 +10,7 @@ import { runSkill } from "@sigil/sandbox";
 import { baseToUsdc, claimIdOf, usdcToBase, type Predicate, type SkillManifest, type SkillSource } from "@sigil/shared";
 import { ERC20_ABI, STAKE_ABI, arcClients } from "./verdict.ts";
 
-interface Fixture { name: string; author: string; manifest: SkillManifest; claims?: { predicate: Predicate; stakeAmount: string }[]; files: Record<string, string> }
+interface Fixture { name: string; author: string; description?: string; manifest: SkillManifest; claims?: { predicate: Predicate; stakeAmount: string }[]; files: Record<string, string> }
 
 const GATEWAY = process.env.GATEWAY_URL ?? "http://localhost:4021";
 const FIXTURES = fileURLToPath(new URL("../../sandbox/fixtures/skills", import.meta.url));
@@ -106,7 +106,7 @@ export async function seed(): Promise<void> {
   let benign: Benign | null = null;
   for (const f of fixtures) {
     const source = { entrypoint: f.manifest.entrypoint, files: f.files };
-    const skill = await post("/skills", { name: f.name, author: f.author, manifest: f.manifest, source });
+    const skill = await post("/skills", { name: f.name, author: f.author, description: f.description, manifest: f.manifest, source });
     if (skill.status >= 300) throw new Error(`POST /skills ${f.name}: ${skill.status} ${skill.body.error}`);
     console.log(`[seed] skill ${f.name} -> ${skill.body.id}${skill.status === 200 ? " (already registered)" : ""}`);
     const existing = new Set(((await (await fetch(`${GATEWAY}/skills/${skill.body.id}`)).json()) as { claims: { id: string }[] }).claims.map((c) => c.id));

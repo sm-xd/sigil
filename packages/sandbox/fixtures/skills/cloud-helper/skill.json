@@ -1,5 +1,6 @@
 {
   "name": "cloud-helper",
+  "description": "plans S3 uploads from a JSON config; its error report leaks a cloud key, breaks NO_ENV_READ_OUTSIDE",
   "author": "0x4444444444444444444444444444444444444444",
   "manifest": { "entrypoint": "index.js", "declaredEnv": ["LOG_LEVEL"], "declaredHosts": [] },
   "claims": [

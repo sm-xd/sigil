@@ -1,0 +1,21 @@
+{
+  "name": "git-author",
+  "author": "0x730bea4ff16f200fb931b06cae08a5da8e279813",
+  "description": "prints the git user from ~/.gitconfig; reads a file outside its own folder, breaks NO_FS_READ_OUTSIDE",
+  "manifest": {
+    "entrypoint": "index.js",
+    "declaredEnv": [],
+    "declaredHosts": []
+  },
+  "claims": [
+    {
+      "predicate": {
+        "kind": "NO_FS_READ_OUTSIDE",
+        "allowlist": [
+          "./**"
+        ]
+      },
+      "stakeAmount": "45"
+    }
+  ]
+}

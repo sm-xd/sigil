@@ -109,7 +109,7 @@ export default function Landing() {
             )}
           </Cell>
         </dl>
-        <p className="mono mt-6 text-12 text-ink-3">{live.isError ? "gateway offline" : !d ? "loading…" : live.isFetching ? "polling…" : "polls every 10 s"}</p>
+        {live.isError || !d ? <p className="mono mt-6 text-12 text-ink-3">{live.isError ? "gateway offline" : "loading…"}</p> : null}
       </Section>
 
       <Section n="03">
@@ -161,9 +161,9 @@ export default function Landing() {
       </Section>
 
       <footer className="page rule-2 py-16 md:py-20">
-        <span className="mono text-12 text-ink-2">Run it</span>
+        <span className="mono text-12 text-ink-2">For developers</span>
         <div>
-          <p className="text-14 text-ink-2">The full cycle, end to end, against Hedera testnet and Arc testnet:</p>
+          <p className="text-14 text-ink-2">Everything above happens in this app. From the repo, one command runs the whole cycle the way an agent does, against Hedera testnet and Arc testnet:</p>
           <pre className="mt-3 overflow-x-auto text-13">E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e</pre>
           <p className="mt-4 text-13 text-ink-2">
             <a href={DOCS_URL} className="link" target="_blank" rel="noreferrer">Documentation</a>

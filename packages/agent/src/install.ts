@@ -1,15 +1,9 @@
 // Materialise a paid-for skill into the sandbox and probe every live claim.
 import { runSkill, type RunInput } from "@sigil/sandbox";
-import type { Claim, SkillSource, TraceBundle } from "@sigil/shared";
+import { PROBE_INPUTS, type Claim, type SkillSource, type TraceBundle } from "@sigil/shared";
 
 export type Run = (opts: Parameters<typeof runSkill>[0]) => Promise<TraceBundle>; // a stub only needs the bundle; the real runner returns more
 export type Log = (s: string) => void;
-
-// Error handlers are where secrets leak: the malformed input exists to walk the skill into them.
-export const PROBE_INPUTS: { label: string; input: RunInput }[] = [
-  { label: "benign", input: { argv: ['{"bucket":"demo","files":["index.html"]}'], stdin: '{"query":"hello"}' } }, // a well-formed config on both argv and stdin
-  { label: "malformed (error path)", input: { argv: ["--not-a-flag"], stdin: "{not json" } },
-];
 
 /** Runs each LIVE claim's predicate over the input set; returns the first violating bundle per claim. */
 export async function probe(

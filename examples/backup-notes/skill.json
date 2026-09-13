@@ -2,5 +2,20 @@
   "name": "backup-notes",
   "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
   "description": "saves stdin to a file in your home folder; breaks NO_FS_WRITE_OUTSIDE",
-  "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
+  "manifest": {
+    "entrypoint": "index.js",
+    "declaredEnv": [],
+    "declaredHosts": []
+  },
+  "claims": [
+    {
+      "predicate": {
+        "kind": "NO_FS_WRITE_OUTSIDE",
+        "allowlist": [
+          "./**"
+        ]
+      },
+      "stakeAmount": "25"
+    }
+  ]
 }

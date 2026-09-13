@@ -2,12 +2,12 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePublicClient, useWriteContract } from "wagmi";
 import { isAddress } from "viem";
 import type { TraceBundle } from "@sigil/shared";
 import { ERC20_ABI, SIGIL_STAKE_ABI } from "@/lib/abi";
-import { ApiError, findClaim, getSkill, postDispute, type WorldProof } from "@/lib/api";
+import { ApiError, findClaim, getSkill, postDispute, postProbe, type WorldProof } from "@/lib/api";
 import { STAKE_ADDRESS, USDC_ADDRESS, arcTx } from "@/lib/chain";
 import { usdc, usdcToBase } from "@/lib/format";
 import { traceHashOf, validateBundle } from "@/lib/hash";
@@ -67,6 +67,8 @@ function Dispute() {
 
   const loadExample = async () => setText(JSON.stringify(await fetch("/example-trace.json").then((r) => r.json()), null, 2));
   const onFile = (f: File | undefined) => { if (f) f.text().then(setText); };
+  // The gateway runs the skill in its sandbox and hands back the bundle; the skill's own output is not evidence and is dropped.
+  const probe = useMutation({ mutationFn: () => postProbe(claimId), onSuccess: ({ stdout: _o, stderr: _e, exitCode: _c, ...bundle }) => setText(JSON.stringify(bundle, null, 2)) });
   const setStep = (i: number, patch: Partial<Step>) => setSteps((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x)));
 
   const submit = async () => {
@@ -109,7 +111,7 @@ function Dispute() {
       <div className="page py-7">
         <h1 className="display text-20">Dispute</h1>
         <p className={`mono text-13 ${found.isLoading ? "text-ink-3" : "text-seal"}`}>
-          {found.isLoading ? "Locating the claim…" : `Claim ${claimId} not found${found.error ? `: ${(found.error as Error).message}` : ""}. Run pnpm seed or open one first.`}
+          {found.isLoading ? "Locating the claim…" : `Claim ${claimId} not found${found.error ? `: ${(found.error as Error).message}` : ""}. Open one from a skill page first.`}
         </p>
       </div>
     );
@@ -148,6 +150,7 @@ function Dispute() {
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
               <label htmlFor="bundle" className="label">Trace bundle (JSON)</label>
               <div className="ml-auto flex gap-4 text-12">
+                <button type="button" className="link text-seal" disabled={probe.isPending} aria-busy={probe.isPending} onClick={() => probe.mutate()}>{probe.isPending ? "running in the sandbox…" : "Run it in the sandbox"}</button>
                 <button type="button" className="link" onClick={loadExample}>Load example bundle</button>
                 <label className="file link cursor-pointer">Upload file<input type="file" accept="application/json,.json" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} /></label>
               </div>
@@ -163,7 +166,7 @@ function Dispute() {
                     {bundle.violations.map((v) => <span key={v.seq} className="block pl-3">#{v.seq} {v.kind} {v.target} <span className="text-ink-2">@ {v.stack.join(" ← ")}</span></span>)}
                   </p>
                 </>
-              ) : <p className="text-ink-2">Paste a bundle, upload one, or load the example (a real run of cloud-helper reading SIGIL_CANARY_AWS).</p>}
+              ) : probe.error ? <p className="text-seal">{(probe.error as Error).message}</p> : <p className="text-ink-2">Run it here: the gateway&apos;s sandbox tries the agent&apos;s two inputs and returns the first run that breaks the claim. Or paste a bundle from your own run, upload one, or load the example (a real run of cloud-helper reading SIGIL_CANARY_AWS).</p>}
             </div>
           </section>
 

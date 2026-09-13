@@ -15,7 +15,7 @@ function Leg({ amount, asset }: { amount: string; asset: string }) {
   return <span className="mono">{h ? hbar(amount) : usdc(amount)}<span className="text-ink-2"> {h ? "HBAR" : "USDC"}</span></span>;
 }
 
-/** What a request costs, the paywall itself fetched from this browser, who holds a licence and who paid. Polls /access every 10 s. */
+/** What a request costs, the paywall itself fetched from this browser, who holds a licence and who paid. Refetches /access every 10 s, silently. */
 function Access({ id }: { id: string }) {
   const q = useQuery({ queryKey: ["access", id], queryFn: () => getAccess(id), refetchInterval: 10_000 });
   const src = useMutation({ mutationFn: () => requestSource(id) });
@@ -86,10 +86,7 @@ function Access({ id }: { id: string }) {
       </div>
 
       <div className="mt-8">
-        <div className="flex items-baseline gap-x-6">
-          <p className="label">Payments <span className="mono">{a.payments.length}</span></p>
-          <span className="mono ml-auto text-12 text-ink-3">{q.isFetching ? "polling…" : "polls every 10 s"}</span>
-        </div>
+        <p className="label">Payments <span className="mono">{a.payments.length}</span></p>
         {!a.payments.length ? <p className="mt-2 text-13 text-ink-2">No paid request on this index yet. Run the agent below.</p> : (
           <div className="mt-2">
             <Ledger>
@@ -112,9 +109,10 @@ function Access({ id }: { id: string }) {
       </div>
 
       <div className="mt-8">
-        <p className="label">Use it from a terminal</p>
+        <p className="label">For agents and developers</p>
         <p className="mt-2 text-13 text-ink-2">
-          <span className="mono">buy</span> pays the 402 once, takes the licence and saves the files under <span className="mono">downloads/</span>, so you can run them;{" "}
+          Registering, claiming, probing, disputing and settling all happen in this app. Buying does not: a browser wallet cannot pay x402 on Hedera, so the buyer is an agent.
+          From the repo, <span className="mono">buy</span> pays the 402 once, takes the licence and saves the files under <span className="mono">downloads/</span>;{" "}
           <span className="mono">e2e</span> is the full agent: it pays, probes the skill in the sandbox and disputes what it finds. Click a line to copy it.
         </p>
         {/* head=Infinity: the whole command, still copy-on-click */}
@@ -128,7 +126,7 @@ function Access({ id }: { id: string }) {
 
 export default function SkillDetail() {
   const { id } = useParams<{ id: string }>();
-  const q = useQuery({ queryKey: ["skill", id], queryFn: () => getSkill(id), refetchInterval: 5_000 });
+  const q = useQuery({ queryKey: ["skill", id], queryFn: () => getSkill(id) });
   if (q.isLoading || q.isError || !q.data) {
     return (
       <div className="page py-7">
@@ -154,6 +152,7 @@ export default function SkillDetail() {
             <h1 className="display text-28">{skill.name}</h1>
             {status ? <Stamp s={status} /> : <span className="text-12 text-ink-3">no capital at risk</span>}
           </div>
+          {skill.description ? <p className="mt-1 max-w-[560px] text-14 text-ink-2">{skill.description}</p> : null}
           <p className="mono mt-1 text-13 text-ink-2"><Hash v={skill.id} head={10} tail={8} /></p>
           <p className="mono mt-3 text-14">
             <Money v={atRisk} tone={atRisk > 0n ? "seal" : "off"} /> <span className="text-ink-2">escrowed on Arc</span>

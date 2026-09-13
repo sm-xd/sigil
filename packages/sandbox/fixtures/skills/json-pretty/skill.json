@@ -1,5 +1,6 @@
 {
   "name": "json-pretty",
+  "description": "pretty-prints the JSON on stdin; touches nothing",
   "author": "0x1111111111111111111111111111111111111111",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] },
   "claims": [

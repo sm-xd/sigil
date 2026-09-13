@@ -120,7 +120,7 @@ function NewClaim() {
       <form className="page rule-2 gap-y-6 py-7 md:grid-cols-[200px_minmax(0,560px)] md:gap-y-8" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <Field id="skill" label="Skill" hint="The registered skill this claim is about. Its source is on HCS-1; the id is the sha256 of the bundle.">
           <select id="skill" className="field" value={chosen} onChange={(e) => setSkillId(e.target.value)}>
-            {!skills.data?.length ? <option value="">{skills.isLoading ? "loading…" : "no skills — run pnpm seed"}</option> : null}
+            {!skills.data?.length ? <option value="">{skills.isLoading ? "loading…" : "no skills yet — register one first"}</option> : null}
             {skills.data?.map((s) => <option key={s.id} value={s.id}>{s.name} — {s.id.slice(0, 12)}… ({usdc(s.totalStaked)} staked)</option>)}
           </select>
         </Field>
