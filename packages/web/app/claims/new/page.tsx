@@ -14,10 +14,14 @@ import { HumanCheck } from "@/components/HumanCheck";
 import { Ext, Hash, Steps, type Step } from "@/components/Ledger";
 import { useArcWallet } from "@/components/Wallet";
 
-const KINDS: { kind: PredicateKind; hint: string }[] = [
-  { kind: "NO_ENV_READ_OUTSIDE", hint: "reads no env var outside the allowlist" },
-  { kind: "NO_NET_EGRESS_OUTSIDE", hint: "opens no connection to a host outside the allowlist" },
-  { kind: "NO_FS_READ_OUTSIDE", hint: "reads no path outside the allowlist" },
+/** allow: what the allowlist holds, or null for the kinds the sandbox refuses outright (nothing to allow-list). */
+const KINDS: { kind: PredicateKind; hint: string; allow: string | null; placeholder: string }[] = [
+  { kind: "NO_ENV_READ_OUTSIDE", hint: "reads no env var outside the allowlist", allow: "env names", placeholder: "LOG_LEVEL" },
+  { kind: "NO_NET_EGRESS_OUTSIDE", hint: "opens no connection to a host outside the allowlist", allow: "hostnames", placeholder: "api.example.com" },
+  { kind: "NO_FS_READ_OUTSIDE", hint: "reads no path outside the allowlist", allow: "path globs", placeholder: "./**" },
+  { kind: "NO_FS_WRITE_OUTSIDE", hint: "writes no path outside the allowlist", allow: "path globs", placeholder: "./**" },
+  { kind: "NO_CHILD_PROCESS", hint: "starts no subprocess or worker", allow: null, placeholder: "" },
+  { kind: "NO_DYNAMIC_CODE", hint: "runs no eval, new Function or vm code", allow: null, placeholder: "" },
 ];
 const MIN_STAKE = 10n * 10n ** 6n;
 
@@ -58,7 +62,8 @@ function NewClaim() {
   const chosen = skill?.id ?? "";
   let amount: bigint | null = null, amountErr = "";
   try { amount = usdcToBase(stake); if (amount < MIN_STAKE) amountErr = "minimum stake is 10 USDC"; } catch (e) { amountErr = (e as Error).message; }
-  const allowlist = allow.split(",").map((s) => s.trim()).filter(Boolean);
+  const K = KINDS.find((k) => k.kind === kind)!;
+  const allowlist = K.allow ? allow.split(",").map((s) => s.trim()).filter(Boolean) : []; // the refused-outright kinds carry no allowlist
   const ready = !!chosen && !!amount && !amountErr && !!proof && isAddress(stakedBy) && (!STAKE_ADDRESS || onArc) && !busy;
 
   const setStep = (i: number, patch: Partial<Step>) => setSteps((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x)));
@@ -101,7 +106,6 @@ function NewClaim() {
     }
   };
 
-  const allowWhat = kind === "NO_ENV_READ_OUTSIDE" ? "env names" : kind === "NO_NET_EGRESS_OUTSIDE" ? "hostnames" : "path globs";
 
   return (
     <div>
@@ -123,7 +127,7 @@ function NewClaim() {
 
         <div className="md:pt-1.5">
           <div id="kind-label" className="label text-ink">Predicate</div>
-          <p className="mt-1 text-12 text-ink-2">What the stake says the skill never does. The sandbox logs every env, fs and net event; one violation in a reproducible trace breaks the claim.</p>
+          <p className="mt-1 text-12 text-ink-2">What the stake says the skill never does. The sandbox records every env, file, network, subprocess and dynamic-code event; one violation in a reproducible trace breaks the claim.</p>
         </div>
         <div role="radiogroup" aria-labelledby="kind-label">
           {KINDS.map((k) => (
@@ -134,8 +138,8 @@ function NewClaim() {
           ))}
         </div>
 
-        <Field id="allow" label="Allowlist" hint={`Comma-separated ${allowWhat} the predicate permits. Empty means the skill may touch nothing of this kind.`}>
-          <input id="allow" className="field" value={allow} onChange={(e) => setAllow(e.target.value)} placeholder={kind === "NO_ENV_READ_OUTSIDE" ? "LOG_LEVEL" : kind === "NO_NET_EGRESS_OUTSIDE" ? "api.example.com" : "./**"} spellCheck={false} autoComplete="off" />
+        <Field id="allow" label="Allowlist" hint={K.allow ? `Comma-separated ${K.allow} the predicate permits. Empty means the skill may touch nothing of this kind.` : "None for this rule. The sandbox refuses every subprocess and every eval, so the claim is simply that the skill never tries."}>
+          {K.allow ? <input id="allow" className="field" value={allow} onChange={(e) => setAllow(e.target.value)} placeholder={K.placeholder} spellCheck={false} autoComplete="off" /> : <p id="allow" className="mono text-13 text-ink-3">no allowlist</p>}
         </Field>
 
         <Field id="stake" label="Stake" hint="USDC locked in SigilStake on Arc, minimum 10.000000. A sustained dispute pays it, with the bond, to the disputer.">

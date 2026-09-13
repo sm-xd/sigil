@@ -5,7 +5,7 @@ import type { Predicate, SkillManifest, SkillSource } from "@sigil/shared";
 
 export { runSkill, verifyTrace, CANARIES, type RunInput, type RunResult } from "./runner.ts";
 export { evaluatePredicate } from "./predicates.ts";
-export { SANDBOX_IMAGE } from "./trace.ts";
+export { SANDBOX_IMAGE, SHIM_VERSION } from "./trace.ts";
 
 // ── Seed fixtures (spec §14): six skills under fixtures/skills/<slug>/{skill.json,index.js} ──
 export const FIXTURE_SLUGS = ["json-pretty", "slugify", "csv-sum", "cloud-helper", "weather-fetch", "unstaked-echo"] as const;

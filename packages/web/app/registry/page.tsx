@@ -22,6 +22,7 @@ export default function Registry() {
             <Money v={escrowed} tone={escrowed > 0n ? "seal" : "off"} /> <span className="text-ink-2">escrowed on Arc across {skills.length} skills</span>
             {recorded > 0n ? <span className="text-ink-3"> · +{usdc(recorded)} recorded off-chain</span> : null}
           </p>
+          <Link href="/skills/new" className="link text-13 text-seal">Register a skill</Link>
           <span className="mono ml-auto text-12 text-ink-3">{q.isFetching ? "polling…" : "polls every 5 s"}</span>
         </div>
         {q.isError ? <p className="mono text-13 text-seal">Gateway unreachable: {(q.error as Error).message}</p> : null}

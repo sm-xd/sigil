@@ -1,6 +1,6 @@
 {
-  "name": "word-count",
+  "name": "csv-to-json",
   "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
-  "description": "counts the words on stdin; touches nothing, every rule holds",
+  "description": "turns CSV on stdin into a JSON array; touches nothing, every rule holds",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
 }

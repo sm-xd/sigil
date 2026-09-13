@@ -69,7 +69,7 @@ const policy = { minStakeUsdc: 50, minClaimAgeSec: 60, maxSustainedDisputes: 0 }
   const gateway = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 
   const violation = { seq: 1, kind: "env" as const, target: "SIGIL_CANARY_AWS", stack: ["index.js:1"] };
-  const bundle = { v: 1 as const, skillId: base.id, predicate: claim.predicate, runtime: { node: "22", image: "sigil-sandbox:node22" }, input: { argv: [], stdin: "" }, events: [violation], violations: [violation], traceHash: "cd".repeat(32) };
+  const bundle = { v: 1 as const, skillId: base.id, predicate: claim.predicate, runtime: { node: "22", image: "sigil-sandbox:node22", shim: 2 }, input: { argv: [], stdin: "" }, events: [violation], violations: [violation], traceHash: "cd".repeat(32) };
   // well-known Hardhat test key #1 → 0x7099…79C8; nothing is ever sent (SIGIL_STAKE_ADDRESS empty)
   const wallet = localWallet({ AGENT_ARC_KEY: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", ARC_RPC_URL: "http://127.0.0.1:1" });
   const lines: string[] = [];

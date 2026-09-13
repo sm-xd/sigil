@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canonicalize, skillIdOf, traceHashOf, usdcToBase, type TraceBundle } from "@sigil/shared";
+import { SHIM_VERSION } from "@sigil/sandbox";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import type { Network, PaymentRequirements } from "@x402/core/types";
 import { decodePaymentResponseHeader, wrapFetchWithPayment, x402Client } from "@x402/fetch";
@@ -100,7 +101,7 @@ const staker = `0x${"aa".repeat(20)}`, disputer = `0x${"bb".repeat(20)}`;
 const claim = await post("/claims", { skillId, predicate, stakeAmount: "10000000", stakedBy: staker, arcTxHash: "", nonce: "test", worldProof: { mock: true, nullifier: N } });
 assert.equal(claim.status, 201, JSON.stringify(claim.body));
 const hashed = (b: Omit<TraceBundle, "traceHash" | "violations"> & Partial<TraceBundle>) => ({ ...b, violations: [], traceHash: traceHashOf(b) });
-const bundle = hashed({ v: 1, skillId, predicate, runtime: { node: process.version, image: "sigil-sandbox:node22" }, input: { argv: [], stdin: "" }, events: [] });
+const bundle = hashed({ v: 1, skillId, predicate, runtime: { node: process.version, image: "sigil-sandbox:node22", shim: SHIM_VERSION }, input: { argv: [], stdin: "" }, events: [] });
 const disputeWith = (nullifier: string, b: unknown = bundle) => ({ by: disputer, counterBond: "2500000", traceBundle: b, arcTxHash: "", worldProof: { mock: true, nullifier } });
 const live = async () => (await json(`/skills/${skillId}`)).body.claims[0].status;
 
@@ -128,6 +129,10 @@ assert(rp.status === 200 ? typeof rp.body.signature === "string" : rp.status ===
 console.log(`✓ 5 rp-context: ${rp.status === 200 ? "signed" : "RP signing key not configured (500)"}`);
 
 server.close();
+// ── the allowlist-free kinds (placed last: the 201 adds a claim, which would shift the per-skill totals asserted above) ──
+// the allowlist-free kinds: accepted empty, refused with entries (a subprocess is never allowed, so there is nothing to allow-list)
+assert.equal((await post("/claims", { skillId, predicate: { kind: "NO_CHILD_PROCESS", allowlist: ["git"] }, stakeAmount: "10000000", stakedBy: staker, arcTxHash: "", nonce: "np1", worldProof: { mock: true, nullifier: N } })).status, 400);
+assert.equal((await post("/claims", { skillId, predicate: { kind: "NO_DYNAMIC_CODE", allowlist: [] }, stakeAmount: "10000000", stakedBy: staker, arcTxHash: "", nonce: "np2", worldProof: { mock: true, nullifier: N } })).status, 201);
 console.log("ALL PASSED");
 process.exit(0); // the Hedera SDK clients keep gRPC channels open
 

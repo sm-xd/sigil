@@ -15,3 +15,5 @@ downloads/
 packages/gateway/data/*
 !packages/gateway/data/.gitkeep
 .claude/settings.local.json
+# local clone for the Improve-the-Harness track; never part of this repo
+hedera-harness/

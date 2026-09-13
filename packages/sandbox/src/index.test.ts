@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
-import { canonicalize, traceHashOf, type TraceEvent, type TraceEventKind } from "@sigil/shared";
-import { CANARIES, evaluatePredicate, FIXTURE_SLUGS, loadFixture, runSkill, verifyTrace } from "./index.ts";
+import { canonicalize, traceHashOf, type Predicate, type TraceEvent, type TraceEventKind } from "@sigil/shared";
+import { CANARIES, evaluatePredicate, FIXTURE_SLUGS, loadFixture, runSkill, SHIM_VERSION, verifyTrace } from "./index.ts";
 
 const ev = (kind: TraceEventKind, target: string): TraceEvent => ({ seq: 1, kind, target, stack: [] });
 
@@ -107,6 +107,36 @@ const netOnEvil = await runSkill({ skillId: "slugify-evil", source: { ...slug.so
 assert.match(netOnEvil.stdout, /^blocked EACCES\n/);
 assert.ok(netOnEvil.events.some((x) => x.kind === "fs" && x.target === "../../etc/passwd"), JSON.stringify(netOnEvil.events));
 assert.deepEqual(netOnEvil.violations, []);
+
+// ── the three newer kinds: writes outside root, subprocesses, dynamic code ───
+{
+  const w = [ev("fswrite", "out.txt"), ev("fswrite", "../../tmp/x"), ev("fswrite", "<outside>/notes.txt"), ev("fs", "<outside>/r")];
+  assert.deepEqual(evaluatePredicate({ kind: "NO_FS_WRITE_OUTSIDE", allowlist: ["<outside>/notes*"] }, w).map((e) => e.target), ["../../tmp/x"]);
+  assert.equal(evaluatePredicate({ kind: "NO_FS_WRITE_OUTSIDE", allowlist: [] }, w).length, 2); // own files always allowed; the read is another kind
+  assert.deepEqual(evaluatePredicate({ kind: "NO_CHILD_PROCESS", allowlist: [] }, [ev("proc", "git"), ev("env", "X")]).map((e) => e.target), ["git"]);
+  assert.deepEqual(evaluatePredicate({ kind: "NO_DYNAMIC_CODE", allowlist: [] }, [ev("code", "eval"), ev("proc", "git")]).map((e) => e.target), ["eval"]);
+}
+const one = (js: string, kind: Predicate["kind"], allowlist: string[] = []) => runSkill({ skillId: "t", source: { entrypoint: "index.js", files: { "index.js": js } }, predicate: { kind, allowlist } });
+// a write outside the root is refused under every predicate, recorded, and a violation only under the write predicate
+const wr = `const fs = require("fs"), os = require("os"), path = require("path"); fs.writeFileSync("own.txt", "ok"); try { fs.writeFileSync(path.join(os.homedir(), "sigil-x.txt"), "x"); console.log("wrote"); } catch (e) { console.log("blocked", e.code); }`;
+const w1 = await one(wr, "NO_FS_WRITE_OUTSIDE", ["./**"]);
+assert.match(w1.stdout, /^blocked EACCES/);
+assert.deepEqual(w1.violations.map((v) => v.kind), ["fswrite"]); assert.match(w1.violations[0]!.target, /^<outside>\//);
+assert.ok(w1.events.some((e) => e.kind === "fswrite" && e.target === "own.txt"), JSON.stringify(w1.events)); // inside root: allowed, recorded, no violation
+assert.equal(w1.traceHash, (await one(wr, "NO_FS_WRITE_OUTSIDE", ["./**"])).traceHash);
+const w2 = await one(wr, "NO_ENV_READ_OUTSIDE"); assert.match(w2.stdout, /^blocked EACCES/); assert.deepEqual(w2.violations, []);
+// a subprocess is refused under every predicate; a violation only under NO_CHILD_PROCESS
+const sp = `try { require("child_process").execSync("git status"); console.log("ran"); } catch (e) { console.log("blocked", e.code); }`;
+const p1 = await one(sp, "NO_CHILD_PROCESS"); assert.match(p1.stdout, /^blocked EACCES/); assert.deepEqual(p1.violations.map((v) => [v.kind, v.target]), [["proc", "git"]]);
+assert.deepEqual((await one(sp, "NO_FS_READ_OUTSIDE", ["./**"])).violations, []);
+// eval, new Function and vm are refused; violations only under NO_DYNAMIC_CODE
+const dc = `for (const f of [() => eval("1+1"), () => new Function("return 2")(), () => require("vm").runInThisContext("3")]) { try { f(); console.log("ran"); } catch (e) { console.log("blocked", e.code); } }`;
+const c1 = await one(dc, "NO_DYNAMIC_CODE"); assert.equal((c1.stdout.match(/blocked EACCES/g) ?? []).length, 3, c1.stdout);
+assert.deepEqual(c1.violations.map((v) => v.target), ["eval", "Function", "vm.runInThisContext"]);
+assert.deepEqual((await one(dc, "NO_ENV_READ_OUTSIDE")).violations, []);
+// the sandbox version is hash-covered like the Node version: a mismatched verifier refuses to rule
+assert.equal(a.runtime.shim, SHIM_VERSION);
+await assert.rejects(verifyTrace({ ...a, runtime: { ...a.runtime, shim: 0 } }, cloud.source), /verifier sandbox mismatch/);
 
 // ── every seed claim holds against benign input; unsafe sources are refused ──
 const benign: Record<string, { argv?: string[]; stdin?: string }> = {

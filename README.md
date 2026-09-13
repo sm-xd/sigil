@@ -31,8 +31,11 @@ public explorer.
 
 ## What happens, step by step
 
-1. **A claim is opened with money behind it.** A participant picks a skill and one of three machine-testable rules
-   (`NO_ENV_READ_OUTSIDE`, `NO_NET_EGRESS_OUTSIDE`, `NO_FS_READ_OUTSIDE`, each with an allowlist), proves they are a
+0. **A skill is listed.** Anyone pastes a small Node program into **Register a skill** in the app (or runs
+   `pnpm register <folder>`). The gateway hashes the source into the skill's id, pins the bundle on Hedera and
+   announces it. Listing is free; money enters only with a claim.
+1. **A claim is opened with money behind it.** A participant picks a skill and one of six machine-testable rules
+   (no env read, network egress, file read or file write outside an allowlist; no subprocess; no dynamic code), proves they are a
    distinct human with **World Selfie Check**, and locks USDC in the `SigilStake` contract on **Arc**. The claim is
    announced on a **Hedera** registry topic and gets its own audit topic.
 2. **An agent pays to use the skill.** It reads the public list of skills, applies a printed policy (only capital
@@ -125,6 +128,8 @@ You need Node 22 and a Hedera testnet account, nothing else. The full walkthroug
    the one in seal red.
 2. Open it, scroll to **Use this skill**, and press **Request the source**. The exact `402` paywall an agent sees
    appears. A browser cannot pay it.
+   To list a skill of your own, open **Register a skill**, pick one of the examples (or paste your code) and press
+   Register: the page shows the id, the Hedera pointer and the announcement, then offers **Open a claim on it**.
 3. Buy it for real from a terminal, which pays the fee once and saves the files locally:
    ```sh
    git clone https://github.com/sm-xd/sigil && cd sigil && pnpm install
@@ -197,7 +202,8 @@ packages/sandbox/         deterministic deny-by-default runner, preload shim, si
 packages/contracts-arc/   SigilStake escrow, DisputeResolver + AttestorResolver, Foundry tests, Arc deploy
 packages/gateway/         the x402 service: discovery, claims and disputes, the verifier, the consumption ledger
 packages/agent/           discover, decide, pay over x402, probe in the sandbox, auto-dispute; the Circle wallet
-packages/web/             the paper-and-ink ledger UI (Next.js): registry, skill, claim, dispute
+packages/web/             the paper-and-ink ledger UI (Next.js): registry, register a skill, skill, claim, dispute
+examples/                 five small skills to register from the UI or the CLI; each holds some rules and breaks one
 scripts/                  seed, e2e, deploy, hedera bootstrap, determinism proof, buy
 docs/                     the documentation site (Mintlify)
 ```

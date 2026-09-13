@@ -5,7 +5,7 @@ import type { Server } from "node:http";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type RequestHandler, type Response } from "express";
-import { canonicalize, claimIdOf, sha256Hex, skillIdOf, traceHashOf, type Claim, type Predicate, type Skill, type SkillManifest, type SkillSource, type TraceBundle, type TraceEvent } from "@sigil/shared";
+import { canonicalize, claimIdOf, NO_ALLOWLIST_KINDS, PREDICATE_KINDS, sha256Hex, skillIdOf, traceHashOf, type Claim, type Predicate, type Skill, type SkillManifest, type SkillSource, type TraceBundle, type TraceEvent } from "@sigil/shared";
 import { createTopic, uploadHcs1 } from "@sigil/hedera";
 import { assertBlocky402, facilitatorUrl, x402Network } from "./blocky402.ts";
 import { HttpError, hcs, registryTopic, save, state, type StoredDispute, type StoredSkill } from "./state.ts";
@@ -25,13 +25,13 @@ interface SkillSummary extends Skill {
 }
 
 // ── input validation (HTTP is a trust boundary) ──────────────────────────────
-const KINDS = ["NO_ENV_READ_OUTSIDE", "NO_NET_EGRESS_OUTSIDE", "NO_FS_READ_OUTSIDE"];
 const isStr = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 const isAddr = (v: unknown): v is string => isStr(v) && /^0x[0-9a-fA-F]{40}$/.test(v);
 const isUnits = (v: unknown): v is string => isStr(v) && /^\d+$/.test(v);
 const isPredicate = (p: unknown): p is Predicate => {
   const x = p as Predicate;
-  return !!x && KINDS.includes(x.kind) && Array.isArray(x.allowlist) && x.allowlist.every((a) => typeof a === "string");
+  return !!x && PREDICATE_KINDS.includes(x.kind) && Array.isArray(x.allowlist) && x.allowlist.every((a) => typeof a === "string")
+    && (!NO_ALLOWLIST_KINDS.has(x.kind) || x.allowlist.length === 0); // a subprocess or eval is never allowed to run, so these kinds take no allowlist
 };
 const isManifest = (m: unknown): m is SkillManifest => {
   const x = m as SkillManifest;
@@ -45,7 +45,7 @@ const isEvent = (e: unknown): e is TraceEvent => {
 const isBundle = (b: unknown): b is TraceBundle => {
   const x = b as TraceBundle;
   return !!x && x.v === 1 && isStr(x.skillId) && isPredicate(x.predicate) && isStr(x.traceHash)
-    && !!x.runtime && isStr(x.runtime.node) && isStr(x.runtime.image)
+    && !!x.runtime && isStr(x.runtime.node) && isStr(x.runtime.image) && typeof x.runtime.shim === "number"
     && !!x.input && Array.isArray(x.input.argv) && x.input.argv.every((a) => typeof a === "string") && typeof x.input.stdin === "string"
     && Array.isArray(x.events) && x.events.every(isEvent);
 };
@@ -204,7 +204,7 @@ export function createApp() {
     if (!isAddr(by) || !isUnits(counterBond) || typeof arcTxHash !== "string")
       throw new HttpError(400, "body: { by (0x…), counterBond (USDC base units), traceBundle, arcTxHash, worldProof }");
     if (!isBundle(traceBundle))
-      throw new HttpError(400, "traceBundle: { v: 1, skillId, predicate: { kind, allowlist }, runtime: { node, image }, input: { argv, stdin }, events: [{ seq, kind, target, stack }], traceHash }");
+      throw new HttpError(400, "traceBundle: { v: 1, skillId, predicate: { kind, allowlist }, runtime: { node, image, shim }, input: { argv, stdin }, events: [{ seq, kind, target, stack }], traceHash }");
     const bundle: StoredDispute["traceBundle"] = traceBundle;
     // The evidence must be about THIS claim, or a trace of the same skill under a laxer/stricter predicate
     // would break an honest claim: verifyTrace re-runs the BUNDLE's predicate and input, not the claim's.

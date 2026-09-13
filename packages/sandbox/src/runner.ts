@@ -7,7 +7,7 @@ import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { traceHashOf, type Predicate, type SkillSource, type TraceBundle, type TraceEvent } from "@sigil/shared";
-import { makeBundle } from "./trace.ts";
+import { makeBundle, SHIM_VERSION } from "./trace.ts";
 
 export const CANARIES = { SIGIL_CANARY_AWS: "AKIA0000SIGIL0CANARY", SIGIL_CANARY_TOKEN: "sigil-canary-token" } as const;
 const SHIM = fileURLToPath(new URL("./shim.cjs", import.meta.url));
@@ -47,6 +47,7 @@ export async function runSkill(opts: { skillId: string; source: SkillSource; pre
 export async function verifyTrace(bundle: TraceBundle, source: SkillSource): Promise<{ reproduced: boolean; observedHash: string }> {
   // runtime.node is hash-covered: a verifier on another Node version can never reproduce, so fail loudly instead of ruling "not reproduced".
   if (bundle.runtime.node !== process.version) throw new Error(`verifier runtime mismatch: the bundle ran on Node ${bundle.runtime.node}, this verifier is ${process.version}; run the verifier on ${bundle.runtime.node}`);
+  if (bundle.runtime.shim !== SHIM_VERSION) throw new Error(`verifier sandbox mismatch: the bundle was produced by sandbox shim v${bundle.runtime.shim}, this verifier runs v${SHIM_VERSION}; update the older side`);
   const rerun = await runSkill({ skillId: bundle.skillId, source, predicate: bundle.predicate, input: bundle.input });
   const observedHash = rerun.traceHash;
   return { reproduced: observedHash === bundle.traceHash && traceHashOf(bundle) === bundle.traceHash && rerun.violations.length > 0, observedHash };
@@ -61,7 +62,8 @@ function scrubPrefixes(): string[] {
 
 function exec(root: string, entry: string, input: { argv: string[]; stdin: string }, env: Record<string, string>) {
   return new Promise<{ node: string; events: TraceEvent[]; stdout: string; stderr: string; exitCode: number | null }>((resolve, reject) => {
-    const child = spawn(process.execPath, ["--disable-warning=ExperimentalWarning", "--require", SHIM, entry, ...input.argv], {
+    // --disallow-code-generation-from-strings: V8 refuses eval/new Function even through routes the shim cannot wrap ((function(){}).constructor)
+    const child = spawn(process.execPath, ["--disable-warning=ExperimentalWarning", "--disallow-code-generation-from-strings", "--require", SHIM, entry, ...input.argv], {
       cwd: root, env, stdio: ["pipe", "pipe", "pipe", "pipe"],
     });
     let stdout = "", stderr = "", raw = "";
@@ -74,7 +76,7 @@ function exec(root: string, entry: string, input: { argv: string[]; stdin: strin
     child.on("close", (exitCode) => {
       clearTimeout(timer);
       const lines = raw.split("\n").filter(Boolean).map((l) => JSON.parse(l));
-      if (lines[0]?.shim !== 1) return reject(new Error(`sandbox shim did not load (exit ${exitCode}): ${stderr.trim()}`));
+      if (lines[0]?.shim !== SHIM_VERSION) return reject(new Error(`sandbox shim did not load or is v${lines[0]?.shim} (expected v${SHIM_VERSION}, exit ${exitCode}): ${stderr.trim()}`));
       resolve({ node: lines[0].node, events: lines.slice(1).filter((e) => e.seq), stdout, stderr, exitCode });
     });
     child.stdin!.on("error", () => {}); // skill may never read stdin

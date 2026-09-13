@@ -5,7 +5,12 @@ import { createHash } from "node:crypto";
 export type PredicateKind =
   | "NO_ENV_READ_OUTSIDE" // reads no env var outside the allowlist
   | "NO_NET_EGRESS_OUTSIDE" // opens no connection to a host outside the allowlist
-  | "NO_FS_READ_OUTSIDE"; // reads no path outside the allowlist
+  | "NO_FS_READ_OUTSIDE" // reads no path outside the allowlist
+  | "NO_FS_WRITE_OUTSIDE" // writes no path outside the allowlist
+  | "NO_CHILD_PROCESS" // starts no subprocess or worker (no allowlist: the sandbox never lets one run, the claim is that the skill never tries)
+  | "NO_DYNAMIC_CODE"; // no eval, new Function or vm (no allowlist, same reason)
+export const PREDICATE_KINDS: readonly PredicateKind[] = ["NO_ENV_READ_OUTSIDE", "NO_NET_EGRESS_OUTSIDE", "NO_FS_READ_OUTSIDE", "NO_FS_WRITE_OUTSIDE", "NO_CHILD_PROCESS", "NO_DYNAMIC_CODE"];
+export const NO_ALLOWLIST_KINDS: ReadonlySet<PredicateKind> = new Set<PredicateKind>(["NO_CHILD_PROCESS", "NO_DYNAMIC_CODE"]);
 
 export interface Predicate {
   kind: PredicateKind;
@@ -72,7 +77,7 @@ export interface Resolution {
 }
 
 // ── Sandbox trace ────────────────────────────────────────────────────────────
-export type TraceEventKind = "env" | "fs" | "net";
+export type TraceEventKind = "env" | "fs" | "net" | "fswrite" | "proc" | "code";
 
 export interface TraceEvent {
   seq: number;
@@ -85,7 +90,7 @@ export interface TraceBundle {
   v: 1;
   skillId: string;
   predicate: Predicate;
-  runtime: { node: string; image: string }; // pinned so re-runs match
+  runtime: { node: string; image: string; shim: number }; // pinned so re-runs match; shim = the sandbox interposition version, bumped whenever the shim changes what it records
   input: { argv: string[]; stdin: string };
   events: TraceEvent[];
   violations: TraceEvent[]; // subset of events that break the predicate

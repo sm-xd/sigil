@@ -2,7 +2,7 @@
 // so client components import only TYPES from it and hash here. canonicalize is copied verbatim; sha256 comes from
 // viem (sync, @noble/hashes) — byte-identical to createHash("sha256"). Checked by scripts in the parent report.
 import { sha256, stringToBytes } from "viem";
-import type { Predicate, TraceBundle } from "@sigil/shared";
+import type { Predicate, PredicateKind, SkillSource, TraceBundle } from "@sigil/shared";
 
 /** Sorted keys, undefined dropped, arrays ordered, JSON number formatting. */
 export function canonicalize(value: unknown): string {
@@ -24,6 +24,9 @@ function sortDeep(v: unknown): unknown {
 
 export const sha256Hex = (s: string): string => sha256(stringToBytes(s)).slice(2);
 
+/** Skill.id = sha256 of the canonical source, the same derivation as the gateway. */
+export const skillIdOf = (source: SkillSource): string => sha256Hex(canonicalize(source));
+
 export function claimIdOf(skillId: string, predicate: Predicate, stakedBy: string, nonce: string): `0x${string}` {
   return `0x${sha256Hex(canonicalize({ skillId, predicate, stakedBy: stakedBy.toLowerCase(), nonce }))}`;
 }
@@ -33,7 +36,8 @@ export function traceHashOf(b: Omit<TraceBundle, "traceHash" | "violations">): s
   return sha256Hex(canonicalize({ v, skillId, predicate, runtime, input, events }));
 }
 
-const KINDS = ["NO_ENV_READ_OUTSIDE", "NO_NET_EGRESS_OUTSIDE", "NO_FS_READ_OUTSIDE"];
+const KINDS = ["NO_ENV_READ_OUTSIDE", "NO_NET_EGRESS_OUTSIDE", "NO_FS_READ_OUTSIDE", "NO_FS_WRITE_OUTSIDE", "NO_CHILD_PROCESS", "NO_DYNAMIC_CODE"] as const satisfies readonly PredicateKind[];
+type _AllKindsListed = Exclude<PredicateKind, (typeof KINDS)[number]> extends never ? true : "a PredicateKind is missing from KINDS"; const _kindsComplete: _AllKindsListed = true; void _kindsComplete;
 
 /** Shape check for a pasted/uploaded bundle. Returns an error string or null. */
 export function validateBundle(x: unknown): string | null {
@@ -42,7 +46,7 @@ export function validateBundle(x: unknown): string | null {
   if (b.v !== 1) return "v must be 1";
   if (typeof b.skillId !== "string" || !b.skillId) return "skillId missing";
   if (!b.predicate || !KINDS.includes(b.predicate.kind) || !Array.isArray(b.predicate.allowlist)) return "predicate.kind / allowlist invalid";
-  if (!b.runtime || typeof b.runtime.node !== "string" || typeof b.runtime.image !== "string") return "runtime.node / runtime.image missing";
+  if (!b.runtime || typeof b.runtime.node !== "string" || typeof b.runtime.image !== "string" || typeof b.runtime.shim !== "number") return "runtime.node / runtime.image / runtime.shim missing";
   if (!b.input || !Array.isArray(b.input.argv) || typeof b.input.stdin !== "string") return "input.argv / input.stdin missing";
   if (!Array.isArray(b.events) || !Array.isArray(b.violations)) return "events / violations must be arrays";
   for (const e of [...b.events, ...b.violations])

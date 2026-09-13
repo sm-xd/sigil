@@ -53,10 +53,11 @@ Every command, every environment variable, every expected log line, and the host
 
 The showpiece is a visitor using a skill that has money behind it:
 
-1. Open the registry, click the skill with USDC staked on Arc.
-2. Press **Request the source** — the `402` paywall appears.
-3. In a terminal, run `E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e`.
-4. Watch the payment land, the sandbox find the violation, and the 12.5 USDC pot move on Arc — all on screen.
+1. Open **Register a skill**, pick an example (say `git-status`, which shells out), press Register, then **Open a claim on it** with the rule it breaks (`NO_CHILD_PROCESS`).
+2. Open the registry, click a skill with USDC staked on Arc.
+3. Press **Request the source** — the `402` paywall appears.
+4. In a terminal, run `E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e`.
+5. Watch the payment land, the sandbox find the violation, and the 12.5 USDC pot move on Arc — all on screen.
 
 <Frame caption="A settled dispute: the pot has moved to the winner and the outcome is stamped.">
   <img src="/docs/img/dispute-settled.png" alt="A settled dispute on the money panel" />

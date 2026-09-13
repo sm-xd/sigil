@@ -5,17 +5,26 @@ description: "One claim, from the money going in to the money moving out, in fiv
 
 A claim about a skill has a whole life: it is opened with money behind it, an agent buys and tests the skill, and if the skill misbehaves the money moves. Here is that loop, start to finish.
 
+<Note>
+**Before any of it, a skill is listed.** Open **Register a skill** in the app, pick one of the bundled examples or paste your own small Node program, and press Register. The gateway hashes the source into the skill's id, pins the bundle on Hedera and announces it. Listing costs nothing; money enters only with a claim.
+</Note>
+
 <Frame caption="How a claim lives and dies: staked on Arc, bought over x402, probed in the sandbox, disputed with a bond, settled by a re-run.">
   <img src="/docs/img/diagram-claim-lifecycle.png" alt="The five-step claim lifecycle" />
 </Frame>
 
 <Steps>
   <Step title="Claim — lock the money on Arc">
-    A participant picks a skill and one of three testable rules (called **predicates**):
+    A participant picks a skill and one of six testable rules (called **predicates**):
 
     - `NO_ENV_READ_OUTSIDE` — reads no environment variable outside an allowlist.
     - `NO_NET_EGRESS_OUTSIDE` — opens no network connection outside an allowlist.
     - `NO_FS_READ_OUTSIDE` — reads no file outside the skill's own folder.
+    - `NO_FS_WRITE_OUTSIDE` — writes no file outside the skill's own folder.
+    - `NO_CHILD_PROCESS` — never starts a subprocess or worker.
+    - `NO_DYNAMIC_CODE` — never runs `eval`, `new Function` or `vm` code.
+
+    The last two have no allowlist on purpose: the sandbox refuses every subprocess and every eval, because an allowed one would run outside the sandbox and take the proof with it. Those claims say simply that the skill never tries.
 
     They prove they are a real, distinct human with **World Selfie Check**, then lock USDC in the `SigilStake` contract on **Arc**. The claim is announced on a **Hedera** registry topic and gets its own audit topic.
   </Step>

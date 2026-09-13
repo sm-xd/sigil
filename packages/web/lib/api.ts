@@ -1,5 +1,5 @@
 // Gateway HTTP client. Shapes mirror packages/gateway/src/server.ts (the truth) and ARCHITECTURE.md CONTRACT.
-import type { Claim, Dispute, Predicate, Resolution, Skill, TraceBundle } from "@sigil/shared"; // Claim/Dispute carry arcTxHash ("" = off-chain record)
+import type { Claim, Dispute, Predicate, Resolution, Skill, SkillManifest, SkillSource, TraceBundle } from "@sigil/shared"; // Claim/Dispute carry arcTxHash ("" = off-chain record)
 
 export interface SkillSummary extends Skill {
   totalStaked: string; // USDC base units, LIVE + DISPUTED claims (every recorded claim)
@@ -52,6 +52,13 @@ export async function requestSource(id: string): Promise<{ status: 402; paywall:
   if (res.status === 402) return { status: 402, paywall: JSON.parse(text) as Paywall };
   if (!res.ok) throw new ApiError(res.status, `${res.status} ${res.statusText}`);
   return { status: 200, bytes: new Blob([text]).size };
+}
+/** Register a skill. The gateway hashes the canonical source into the id, so re-posting the same files is a 200 with the same skill. */
+export async function postSkill(b: { name: string; author: string; manifest: SkillManifest; source: SkillSource }): Promise<{ skill: Skill; created: boolean }> {
+  const res = await fetch(`${BASE}/skills`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+  const json = (await res.json().catch(() => ({}))) as Skill & { error?: string };
+  if (!res.ok) throw new ApiError(res.status, json.error ?? `${res.status} ${res.statusText}`);
+  return { skill: json, created: res.status === 201 };
 }
 export const postClaim = (b: { skillId: string; predicate: Predicate; stakeAmount: string; stakedBy: string; arcTxHash: string; worldProof: WorldProof; nonce: string }) => call<Claim>("/claims", b);
 export const postDispute = (claimId: string, b: { by: string; counterBond: string; traceBundle: TraceBundle; arcTxHash: string; worldProof: WorldProof }) => call<Dispute>(`/claims/${claimId}/dispute`, b);

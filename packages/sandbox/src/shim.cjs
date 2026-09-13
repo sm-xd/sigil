@@ -1,12 +1,12 @@
 // @sigil/sandbox preload shim. Loaded via --require before the skill's entrypoint.
-// Every env/fs/net touch is written synchronously to fd 3 as one JSON line
+// Every env / fs read / fs write / net / subprocess / dynamic-code touch is written synchronously to fd 3 as one JSON line
 // ({seq, kind, target, stack}) at the moment it happens, so nothing is buffered
 // and process.exit / uncaught exceptions cannot lose events. Access is denied by
 // default and a predicate's allowlist only WIDENS it, so a blocked call never
 // succeeds under any predicate; which events count as violations stays
 // predicate-scoped and is decided later by predicates.ts.
-// ponytail: JS-level interposition only (no seccomp/namespaces); child processes,
-// workers, UDP and native bindings are refused outright. Upgrade: gVisor/Docker.
+// ponytail: JS-level interposition only (no seccomp/namespaces); UDP and native
+// bindings are refused outright. Upgrade: gVisor/Docker.
 "use strict";
 const fs = require("fs"), path = require("path"), net = require("net"), dns = require("dns");
 const http = require("http"), https = require("https"), cp = require("child_process");
@@ -54,7 +54,7 @@ function record(kind, target, { always = false, blocked = false } = {}) {
   writeSync(3, JSON.stringify({ seq: ++seq, kind, target, stack: w.stack }) + "\n");
   if (seq >= MAX_EVENTS) { writeSync(3, JSON.stringify({ truncated: true }) + "\n"); process.exit(71); } // deterministic cut-off
 }
-writeSync(3, JSON.stringify({ shim: 1, node: process.version }) + "\n");
+writeSync(3, JSON.stringify({ shim: 2, node: process.version }) + "\n"); // keep in sync with SHIM_VERSION in trace.ts
 
 // ── env ────────────────────────────────────────────────────────────────────
 // process.env becomes a Proxy whose target holds only allowed keys: util.inspect
@@ -89,32 +89,49 @@ function fsTarget(p) {
 const fsInside = (t) => !(t === ".." || t.startsWith("../") || t.startsWith("/") || t.startsWith("<outside>"));
 const fsAllowed = (t) => fsInside(t) || (isKind("NO_FS_READ_OUTSIDE") && predicate.allowlist.some((g) => path.posix.matchesGlob(t, g))); // verbatim: "./**" never matches outside
 const eacces = (t) => Object.assign(new Err(`EACCES: permission denied, open '${t}'`), { code: "EACCES", errno: -13, syscall: "open", path: t });
+// Writes mirror reads: inside root always allowed, outside refused unless NO_FS_WRITE_OUTSIDE names it (event kind "fswrite").
+const fsWriteAllowed = (t) => fsInside(t) || (isKind("NO_FS_WRITE_OUTSIDE") && predicate.allowlist.some((g) => path.posix.matchesGlob(t, g)));
+const allowedBy = { fs: fsAllowed, fswrite: fsWriteAllowed };
+const O_WRITE = fs.constants.O_WRONLY | fs.constants.O_RDWR | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_APPEND;
+const isWriteFlags = (f) => (typeof f === "number" ? (f & O_WRITE) !== 0 : typeof f === "string" && /[wa+]/.test(f)); // undefined -> "r"
 let nested = 0; // readFileSync calls openSync internally: check both, log once
-function guardFs(obj, name, mode) { // mode: "sync" throws | "cb" errors via last arg | "promise" rejects
+// spec.kind: "fs" | "fswrite" | "auto" (open: decided by the flags argument); spec.dest: index of a second, written path (rename/copy/link)
+function guardFs(obj, name, mode, spec = {}) { // mode: "sync" throws | "cb" errors via last arg | "promise" rejects
   const orig = obj[name];
   if (!orig) return;
-  obj[name] = function (p, ...rest) {
-    const t = fsTarget(p);
-    if (t !== null) {
-      const ok = fsAllowed(t);
-      if (!nested) record("fs", t, { blocked: !ok });
+  obj[name] = function (...args) {
+    const checks = [[spec.kind === "auto" ? (isWriteFlags(args[1]) ? "fswrite" : "fs") : spec.kind || "fs", args[0]]];
+    if (spec.dest !== undefined) checks.push(["fswrite", args[spec.dest]]);
+    for (const [kind, p] of checks) {
+      const t = fsTarget(p);
+      if (t === null) continue;
+      const ok = allowedBy[kind](t);
+      if (!nested) record(kind, t, { blocked: !ok });
       if (!ok) {
-        const err = eacces(t), cb = rest[rest.length - 1];
+        const err = eacces(t), cb = args[args.length - 1];
         if (mode === "promise") return Promise.reject(err);
         if (mode === "cb" && typeof cb === "function") { process.nextTick(cb, name === "exists" ? false : err); return; }
         throw err;
       }
     }
-    if (mode !== "sync") return orig.call(this, p, ...rest);
-    nested++;
-    try { return orig.call(this, p, ...rest); } finally { nested--; }
+    nested++; // the synchronous part of any call (cb and promise included) may re-enter another guarded API
+    try { return orig.call(this, ...args); } finally { nested--; }
   };
 }
-for (const n of ["readFileSync", "openSync", "createReadStream", "statSync", "lstatSync", "readdirSync", "opendirSync", "existsSync", "accessSync", "copyFileSync", "cpSync", "globSync"]) guardFs(fs, n, "sync");
-for (const n of ["readFile", "open", "stat", "lstat", "readdir", "opendir", "exists", "access", "copyFile", "cp", "glob"]) guardFs(fs, n, "cb");
-for (const n of ["readFile", "open", "stat", "lstat", "readdir", "opendir", "access", "copyFile", "cp"]) guardFs(fs.promises, n, "promise");
+for (const n of ["readFileSync", "createReadStream", "statSync", "lstatSync", "readdirSync", "opendirSync", "existsSync", "accessSync", "globSync"]) guardFs(fs, n, "sync");
+for (const n of ["readFile", "stat", "lstat", "readdir", "opendir", "exists", "access", "glob"]) guardFs(fs, n, "cb");
+for (const n of ["readFile", "stat", "lstat", "readdir", "opendir", "access"]) guardFs(fs.promises, n, "promise");
 guardFs(fs.promises, "glob", "sync"); // returns an async iterator, so a sync throw is the only way to refuse
 guardFs(fs, "openAsBlob", "promise");
+guardFs(fs, "openSync", "sync", { kind: "auto" }); guardFs(fs, "open", "cb", { kind: "auto" }); guardFs(fs.promises, "open", "promise", { kind: "auto" });
+const W = { kind: "fswrite" }, COPY = { kind: "fs", dest: 1 }, MOVE = { kind: "fswrite", dest: 1 };
+for (const n of ["writeFileSync", "appendFileSync", "mkdirSync", "rmSync", "rmdirSync", "unlinkSync", "truncateSync", "chmodSync", "chownSync", "utimesSync", "mkdtempSync", "createWriteStream"]) guardFs(fs, n, "sync", W);
+for (const n of ["writeFile", "appendFile", "mkdir", "rm", "rmdir", "unlink", "truncate", "chmod", "chown", "utimes", "mkdtemp"]) guardFs(fs, n, "cb", W);
+for (const n of ["writeFile", "appendFile", "mkdir", "rm", "rmdir", "unlink", "truncate", "chmod", "chown", "utimes", "mkdtemp"]) guardFs(fs.promises, n, "promise", W);
+for (const n of ["copyFileSync", "cpSync", "linkSync", "symlinkSync"]) guardFs(fs, n, "sync", COPY); // source read + destination written; a symlink to an outside target is refused here, so no link inside root can point out
+for (const n of ["copyFile", "cp", "link", "symlink"]) guardFs(fs, n, "cb", COPY);
+for (const n of ["copyFile", "cp", "link", "symlink"]) guardFs(fs.promises, n, "promise", COPY);
+guardFs(fs, "renameSync", "sync", MOVE); guardFs(fs, "rename", "cb", MOVE); guardFs(fs.promises, "rename", "promise", MOVE);
 
 // ── net: target is "host:port" for connects, bare "host" for DNS lookups ───
 const hostOf = (t) => (t.lastIndexOf(":") > 0 ? t.slice(0, t.lastIndexOf(":")) : t).toLowerCase();
@@ -166,10 +183,23 @@ globalThis.fetch = async function (input, init) {
   return origFetch(input, init);
 };
 
+// ── subprocesses and dynamic code: always refused, and recorded ────────────
+// No allowlist can widen these: an allow-listed subprocess or eval would run outside the shim, taking
+// isolation and determinism with it. The sandbox refuses every attempt under every predicate; the
+// predicate NO_CHILD_PROCESS / NO_DYNAMIC_CODE only decides whether the attempt is a violation.
+const refused = (kind, t, syscall) => { record(kind, t, { blocked: true }); return Object.assign(new Err(`EACCES: ${kind === "proc" ? "child process" : "dynamic code"} ${t} refused by sigil sandbox`), { code: "EACCES", syscall }); };
+const progOf = (v) => path.basename(String(Buffer.isBuffer(v) ? v.toString() : v ?? "").trim().split(/\s+/)[0] || "?"); // spawn("git") and exec("git status -s") both -> "git"
+for (const n of ["spawn", "spawnSync", "exec", "execSync", "execFile", "execFileSync", "fork"]) cp[n] = function (file) { throw refused("proc", progOf(file), n); };
+require("worker_threads").Worker = function () { throw refused("proc", "worker", "worker"); };
+const vm = require("vm"), OrigFunction = Function;
+globalThis.eval = function () { throw refused("code", "eval", "eval"); }; // unnamed: "eval" is a reserved binding name in strict mode
+globalThis.Function = function Function() { throw refused("code", "Function", "Function"); };
+Object.setPrototypeOf(globalThis.Function, OrigFunction); globalThis.Function.prototype = OrigFunction.prototype; // `x instanceof Function` still holds
+for (const n of ["runInThisContext", "runInNewContext", "runInContext", "compileFunction"]) vm[n] = function () { throw refused("code", `vm.${n}`, n); };
+vm.Script = function Script() { throw refused("code", "vm.Script", "Script"); };
+// ponytail: the runner also passes --disallow-code-generation-from-strings, so (function(){}).constructor("…") is refused by V8 itself, unrecorded.
 // ── escape hatches with no predicate vocabulary: refused outright ──────────
 const refuse = (what) => () => { throw Object.assign(new Err(`EACCES: ${what} refused by sigil sandbox`), { code: "EACCES", syscall: what }); };
-for (const n of ["spawn", "spawnSync", "exec", "execSync", "execFile", "execFileSync", "fork"]) cp[n] = refuse(n);
-require("worker_threads").Worker = refuse("worker");
 require("dgram").createSocket = refuse("dgram");
 process.binding = process._linkedBinding = process.dlopen = refuse("binding");
 require("module").syncBuiltinESMExports();

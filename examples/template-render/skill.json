@@ -1,6 +1,6 @@
 {
-  "name": "word-count",
+  "name": "template-render",
   "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
-  "description": "counts the words on stdin; touches nothing, every rule holds",
+  "description": "fills a template with new Function(); breaks NO_DYNAMIC_CODE",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
 }

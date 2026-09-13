@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { STAKE_ADDRESS, WORLD_MODE } from "@/lib/chain";
 import { Wallet } from "./Wallet";
 
-const LINKS = [["/registry", "Registry"], ["/claims/new", "Open a claim"]] as const;
+const LINKS = [["/registry", "Registry"], ["/skills/new", "Register a skill"], ["/claims/new", "Open a claim"]] as const;
 
 /** One hairline-ruled row: the mark, two links, and on the right the wallet plus the stub notes that apply. */
 export function Nav() {

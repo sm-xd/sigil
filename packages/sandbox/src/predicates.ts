@@ -12,10 +12,17 @@ const fsInside = (t: string) => !(t === ".." || t.startsWith("../") || t.startsW
 /** Which events break the predicate. Own files (inside the sandbox root) are always allowed. */
 export function evaluatePredicate(predicate: Predicate, events: TraceEvent[]): TraceEvent[] {
   const { kind, allowlist } = predicate;
+  // globs match verbatim: "./**" never matches an outside target ("**" alone would match "/etc/passwd")
+  const outside = (t: string) => !fsInside(t) && !allowlist.some((g) => path.posix.matchesGlob(t, g));
   return events.filter((e) => {
-    if (kind === "NO_ENV_READ_OUTSIDE") return e.kind === "env" && !allowlist.includes(e.target);
-    if (kind === "NO_NET_EGRESS_OUTSIDE") return e.kind === "net" && !allowlist.some((h) => h.toLowerCase() === hostOf(e.target));
-    // globs match verbatim: "./**" never matches an outside target ("**" alone would match "/etc/passwd")
-    return e.kind === "fs" && !fsInside(e.target) && !allowlist.some((g) => path.posix.matchesGlob(e.target, g));
+    switch (kind) {
+      case "NO_ENV_READ_OUTSIDE": return e.kind === "env" && !allowlist.includes(e.target);
+      case "NO_NET_EGRESS_OUTSIDE": return e.kind === "net" && !allowlist.some((h) => h.toLowerCase() === hostOf(e.target));
+      case "NO_FS_READ_OUTSIDE": return e.kind === "fs" && outside(e.target);
+      case "NO_FS_WRITE_OUTSIDE": return e.kind === "fswrite" && outside(e.target);
+      case "NO_CHILD_PROCESS": return e.kind === "proc"; // no allowlist: the sandbox never lets one run, so any attempt breaks the claim
+      case "NO_DYNAMIC_CODE": return e.kind === "code";
+      default: return false;
+    }
   });
 }

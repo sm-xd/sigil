@@ -1,6 +1,6 @@
 {
-  "name": "word-count",
+  "name": "git-status",
   "author": "0x2Dd751E8eC017B95e6c40652ED0A8080670e746C",
-  "description": "counts the words on stdin; touches nothing, every rule holds",
+  "description": "shells out to git; breaks NO_CHILD_PROCESS",
   "manifest": { "entrypoint": "index.js", "declaredEnv": [], "declaredHosts": [] }
 }
