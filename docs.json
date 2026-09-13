@@ -26,12 +26,6 @@
         ]
       },
       {
-        "group": "Tracks",
-        "pages": [
-          "docs/tracks"
-        ]
-      },
-      {
         "group": "Run it yourself",
         "pages": [
           "docs/run-it"

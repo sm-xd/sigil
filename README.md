@@ -96,8 +96,7 @@ action itself, as ERC-4337 user operations. The full cycle (stake, bond, pay out
   only on a reproduced sandbox violation.
 - The frontend and backend: [`packages/web`](packages/web) and [`packages/gateway`](packages/gateway), live at the
   links above.
-- Docs: [architecture](https://sigil-docs-568611a1.mintlify.app/docs/architecture) and
-  [tracks](https://sigil-docs-568611a1.mintlify.app/docs/tracks).
+- Docs: [architecture](https://sigil-docs-568611a1.mintlify.app/docs/architecture).
 
 ### World: Selfie Check
 
