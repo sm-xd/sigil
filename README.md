@@ -26,6 +26,7 @@ public explorer.
 | Every transaction, in order | [EVIDENCE.md](EVIDENCE.md) |
 | Demo script | [DEMO.md](DEMO.md) |
 | Architecture and contracts | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Feedback for the sponsors | [FEEDBACK-HEDERA.md](FEEDBACK-HEDERA.md) · [FEEDBACK-ARC.md](FEEDBACK-ARC.md) · [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md) |
 
 ![Architecture: participants on top, the gateway, sandbox, web app and agent in the middle, Hedera, Arc and World underneath, with the seven numbered lifecycle steps as money, data and proof flows](docs/img/diagram-architecture.png)
 
@@ -61,45 +62,58 @@ public explorer.
 ### Hedera: AI & Agentic Payments
 
 **What we built.** A live x402-gated service on Hedera testnet, settled through the Blocky402 facilitator, and an
-agent that consumes it end to end. Access is metered per kilobyte, every claim and payment is an immutable Hedera
-message, each buyer gets an HTS licence NFT, and the agent carries an HCS-14 identity.
+agent that consumes it end to end. Access is metered per kilobyte of source, every claim, payment, dispute and verdict
+is an immutable Hedera message, skill sources and dispute evidence are pinned as HCS-1 files, each buyer gets an HTS
+licence NFT, and the agent carries an HCS-14 identity.
 
 **Where to look.**
 
-- The x402 service: [`packages/gateway/src/x402.ts`](packages/gateway/src/x402.ts). The gateway refuses to start
-  unless Blocky402 lists `hedera:testnet`.
+- The x402 service: [`packages/gateway/src/x402.ts`](packages/gateway/src/x402.ts), the `ExactHederaScheme` behind
+  a Blocky402 facilitator client, priced per KB. The gateway refuses to start unless Blocky402 lists `hedera:testnet`
+  ([`blocky402.ts`](packages/gateway/src/blocky402.ts)).
 - A real USDC settlement, 1000 base units from the payer to the operator, fee paid by the facilitator:
   [`0.0.7162784@1789216091…`](https://hashscan.io/testnet/transaction/0.0.7162784@1789216091.354310097). Twelve
   settled requests in all: [EVIDENCE.md](EVIDENCE.md).
-- The consuming agent and its payment client: [`packages/agent/src/pay.ts`](packages/agent/src/pay.ts).
+- The consuming agent and its payment client: [`packages/agent/src/pay.ts`](packages/agent/src/pay.ts);
+  [`scripts/buy.ts`](scripts/buy.ts) is the same client by hand.
 - HCS-14 agent identity (`uaid:aid`): [`packages/hedera/src/identity.ts`](packages/hedera/src/identity.ts), posted on
   the registry topic [`0.0.10483153`](https://hashscan.io/testnet/topic/0.0.10483153).
 - A full claim trail on one topic (opened, paid, licence minted, disputed, resolved):
-  [`0.0.10503117`](https://hashscan.io/testnet/topic/0.0.10503117).
-- The licence NFT: [`0.0.10483154`](https://hashscan.io/testnet/token/0.0.10483154).
-- Docs: [paid access over x402](https://sigil-docs-568611a1.mintlify.app/docs/x402-payments).
+  [`0.0.10503117`](https://hashscan.io/testnet/topic/0.0.10503117). The licence NFT:
+  [`0.0.10483154`](https://hashscan.io/testnet/token/0.0.10483154).
+- HCS-1 pins: [`packages/hedera/src/hcs1.ts`](packages/hedera/src/hcs1.ts); a dispute bundle pinned from the browser,
+  [`hcs://1/0.0.10523183`](https://hashscan.io/testnet/topic/0.0.10523183).
+- Run it: `E2E_FRESH_PAYER=1 pnpm buy cloud-helper` pays the 402 once through Blocky402 and prints the HashScan link;
+  the payment row then appears under **Use this skill** on the skill page.
+- Docs: [paid access over x402](https://sigil-docs-568611a1.mintlify.app/docs/x402-payments). Feedback for the Hedera
+  team: [FEEDBACK-HEDERA.md](FEEDBACK-HEDERA.md).
 
 ### Arc: Best Agentic Economy with Circle Agent Stack
 
 **What we built.** The stake custody and settlement layer. `SigilStake` holds the USDC and `DisputeResolver` records
 the verdict, both live on Arc testnet. The agent holds its own **Circle Agent Stack wallet** and signs every on-chain
-action itself, as ERC-4337 user operations. The full cycle (stake, bond, pay out) has run five times.
+action itself, as ERC-4337 user operations, and its decision logic is tied to a real signal: it disputes only on a
+reproduced sandbox violation. The full cycle (stake, bond, pay out) has run five times on Arc.
 
 **Where to look.**
 
 - The contracts: [`packages/contracts-arc/src/SigilStake.sol`](packages/contracts-arc/src/SigilStake.sol), deployed at
   [`0x66fc6324…1566fe`](https://testnet.arcscan.app/address/0x66fc6324ea9afd68a15f2f68ee5b3083391566fe) with the
-  resolver [`0xb741a78b…56e1a8`](https://testnet.arcscan.app/address/0xb741a78b1de72c81546f3d4d988bd4820d56e1a8).
+  resolver [`0xb741a78b…56e1a8`](https://testnet.arcscan.app/address/0xb741a78b1de72c81546f3d4d988bd4820d56e1a8);
+  `forge test`, 28 passing.
 - The agent's wallet backend: [`packages/agent/src/wallet.ts`](packages/agent/src/wallet.ts). Every `approve`,
   `dispute` and `resolve` is a `circle wallet execute` user operation from
   [`0xf6ede051…b2e0`](https://testnet.arcscan.app/address/0xf6ede0518f7543715322cf7bd420aa6a7732b2e0).
 - A full cycle paying out on Arc, `resolve()` moving 12.5 USDC to the winner:
   [`0xf9d4506f…`](https://testnet.arcscan.app/tx/0xf9d4506fb3ac405769860e3ab4c34321e72a1f54a4cd7e2f3eeca04cdad5c1f1).
-- The decision logic tied to a real signal: [`packages/agent/src/index.ts`](packages/agent/src/index.ts) disputes
-  only on a reproduced sandbox violation.
+- The decision logic: [`packages/agent/src/index.ts`](packages/agent/src/index.ts) installs only skills with capital
+  at risk and disputes only when the sandbox reproduces a violation.
 - The frontend and backend: [`packages/web`](packages/web) and [`packages/gateway`](packages/gateway), live at the
-  links above.
-- Docs: [architecture](https://sigil-docs-568611a1.mintlify.app/docs/architecture).
+  links above; the money panel on any dispute page calls `resolve()` from a browser wallet.
+- Run it: `AGENT_WALLET_BACKEND=circle E2E_FRESH_PAYER=1 POLICY_MIN_STAKE_USDC=10 POLICY_MIN_CLAIM_AGE_SEC=0 pnpm e2e`
+  with a logged-in Circle CLI; the run prints every user operation with its Arcscan link.
+- Docs: [architecture](https://sigil-docs-568611a1.mintlify.app/docs/architecture). Feedback for the Circle team:
+  [FEEDBACK-ARC.md](FEEDBACK-ARC.md).
 
 ### World: Selfie Check
 
@@ -111,33 +125,46 @@ every claim and dispute and refuses a dispute whose nullifier matches the claim'
 **Where to look.**
 
 - The both-sides rule, enforced and tested: a dispute reusing the claim's nullifier is refused with
-  `409 — one personhood proof cannot hold both sides of a claim`, and `SigilStake.dispute()` separately rejects
-  `msg.sender == staker`. Gateway test section 4.
+  `409 — one personhood proof cannot hold both sides of a claim` ([`server.ts`](packages/gateway/src/server.ts)),
+  and `SigilStake.dispute()` separately rejects `msg.sender == staker`. Gateway test section 4.
 - The Developer Portal side (app, RP, signing key, the `sigil-participant` action) wired in
-  [`packages/gateway`](packages/gateway) and [`packages/web`](packages/web).
-- First-hand integration feedback for the World team: [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md).
+  [`packages/gateway/src/world.ts`](packages/gateway/src/world.ts) and [`packages/web`](packages/web); a headless agent
+  cannot open the widget, so its operator verifies once and lists the nullifier.
+- Run it: open any LIVE claim's dispute page, press **Mock Selfie Check**, record the dispute; the nullifier is on the
+  dispute row. `pnpm --filter @sigil/gateway test` proves the refusal.
 - Status: live Selfie Check runs as a **labelled mock** until Sandbox tester access lands; the enforcement it feeds is
-  real today, and every screen says so.
+  real today, and every screen says so. Docs: [what is real](https://sigil-docs-568611a1.mintlify.app/docs/whats-real).
+  Feedback for the World team, 22 items with proposed fixes: [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md).
 
-### Open Source: Improve the Hedera Harness
+### Hedera: Improve the Harness
 
-**What we built.** Two fixes to [hedera-dev/hedera-harness](https://github.com/hedera-dev/hedera-harness), both
-found in the first hour of pointing the harness at Sigil's gateway and both opened as pull requests against `dev`
-(2.0.0-rc.4) from this account. Each carries tests and before/after output in its description.
+**What we built.** Two fixes to [hedera-dev/hedera-harness](https://github.com/hedera-dev/hedera-harness), both found
+in the first hour of pointing the harness at Sigil's gateway, both opened as pull requests against `dev` (2.0.0-rc.4).
+Each carries new tests that drive real child processes, a before-and-after transcript, the commands to reproduce the
+failure on `dev`, and scope notes.
 
 **Where to look.**
 
-- [PR #75](https://github.com/hedera-dev/hedera-harness/pull/75) `fix(smoke): poll server.url for readiness instead
-  of waiting for a Local: line`. The SMOKE stage took the dev server's URL from a `Local: http://…` log line, which
-  Next and Vite print and Express, Fastify, Hono and Koa do not, so Sigil's gateway (up in two seconds, logging
-  `[gateway] listening on …`) sat out a 30 s timer and failed. The recipe's `server.url` is now polled for readiness
-  and the log line is a fallback. `+388 / -70` across 4 files.
-- [PR #76](https://github.com/hedera-dev/hedera-harness/pull/76) `fix(preflight): a recipe file that does not parse
+- [#75](https://github.com/hedera-dev/hedera-harness/pull/75), `fix(smoke): poll server.url for readiness instead of
+  waiting for a Local: line`. SMOKE took the dev server's URL from a `Local: http://…` log line, which Next and Vite
+  print and Express, Fastify, Hono and Koa do not, so any plain API server sat out a 30 s timer. Before: the Sigil
+  gateway `FAILED after 30018 ms: did not report a Local URL`. After: `READY url=http://localhost:4021 after 2045 ms`.
+  The recipe's `server.url` is polled, the log line is a fallback, and a port that answers before the server starts is
+  never trusted, so a decoy cannot be graded in place of the app. Five new cases in `test/process-lifecycle.test.mjs`;
+  `+388 / -70` across 4 files.
+- [#76](https://github.com/hedera-dev/hedera-harness/pull/76), `fix(preflight): a recipe file that does not parse
   fails doctor and run, not ASSERT after a paid generator session`. `doctor` and `run` checked that validator files
-  exist but never opened them, so a trailing comma in `static.json` surfaced only after a paid agent session.
-  Preflight now parses every file the recipe points at and fails before any money is spent. `+465 / -15` across 8
-  files.
-- Both are open (merge is not required by the track); CI on fork PRs waits for a maintainer approval gate.
+  exist but never opened them. Before: `doctor` says `Ready to run.` and a trailing comma in `static.json` dies in
+  ASSERT after the paid generator session. After: `doctor` fails with `invalid-recipe-file` and `Fix the file before
+  running`. Five offline cases in `test/recipe-file-shape.test.mjs`, all five failing on `dev`; `+465 / -15` across
+  8 files.
+- Run it:
+  ```sh
+  gh pr checkout 75 --repo hedera-dev/hedera-harness && npm ci && npm run build && node --test test/process-lifecycle.test.mjs   # 11 pass
+  gh pr checkout 76 --repo hedera-dev/hedera-harness && npm ci && npm run build && node --test test/recipe-file-shape.test.mjs    # 5 pass
+  ```
+  On either branch `npm test` is 200 passing, `npm run test:browser` 3 passing, typecheck and build clean.
+- Both are open; the track accepts open PRs. CI on fork PRs waits for a maintainer approval gate.
 
 ## Try it in a few minutes
 
@@ -251,5 +278,5 @@ The full status table, with a link for every claim, is in [EVIDENCE.md](EVIDENCE
 - [RUN.md](RUN.md): every command, environment variable, expected log line, and the hosted deployment.
 - [DEMO.md](DEMO.md): the five-minute demo shot list.
 - [EVIDENCE.md](EVIDENCE.md): every verified transaction, in full.
-- [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md): first-hand Selfie Check integration feedback.
+- [FEEDBACK-HEDERA.md](FEEDBACK-HEDERA.md), [FEEDBACK-ARC.md](FEEDBACK-ARC.md), [FEEDBACK-WORLD.md](FEEDBACK-WORLD.md): first-hand integration feedback for each sponsor.
 - [sigil-build-spec.md](sigil-build-spec.md): the spec this was built against.
